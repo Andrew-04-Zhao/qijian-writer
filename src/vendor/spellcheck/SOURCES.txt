@@ -1,0 +1,14 @@
+Unmodified Chromium Hunspell binary dictionaries for Electron 39.
+
+en-US-10-1.bdic:
+https://redirector.gvt1.com/edgedl/chrome/dict/en-us-10-1.bdic
+
+de-DE-3-0.bdic:
+https://redirector.gvt1.com/edgedl/chrome/dict/de-de-3-0.bdic
+
+Source dictionaries, notices, and licenses:
+https://chromium.googlesource.com/chromium/deps/hunspell_dictionaries/
+
+The upstream LICENSE and language README files are included alongside the
+unmodified dictionaries. These files are standalone data used by Chromium's
+spellchecker, not fonts or user document content.

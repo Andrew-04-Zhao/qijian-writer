@@ -1,0 +1,54 @@
+#app { user-select:none;-webkit-user-select:none }
+#editor,#editor *,.search input,.settings-dialog input,.settings-dialog select { user-select:text;-webkit-user-select:text }
+#lineNumbers,#lineNumbers * { user-select:none!important;-webkit-user-select:none!important;pointer-events:none }
+#edgeTrigger { height:5px;background:transparent }
+#edgebar { z-index:105 }
+.settings-dialog { position:fixed;inset:0;z-index:150;display:grid;grid-template-columns:270px minmax(0,1fr);background:#fdfdff;color:#151515;box-shadow:0 0 0 1px #ddd }
+.settings-nav { background:#eff0f2;display:flex;flex-direction:column;padding-top:0 }
+.settings-label { height:86px;padding:8px 14px;color:#777;font-size:15px }
+.settings-nav button { padding:14px 28px;text-align:left;font-size:17px;border-left:4px solid transparent }
+.settings-nav button:hover { background:#f7f7f8 }
+.settings-nav button.active { background:#fff;border-left-color:#3679ec }
+.settings-main { position:relative;overflow:auto;padding:48px 60px }
+.settings-close { position:absolute;right:14px;top:5px;font-size:28px;color:#777 }
+.settings-page h1 { font-size:30px;font-weight:400;margin:0 0 34px }
+.settings-fields { width:min(520px,100%);margin:35px auto 0 }
+.settings-fields label { display:grid;grid-template-columns:160px 1fr 56px;align-items:center;gap:12px;min-height:56px;font-size:18px;text-align:right }
+.settings-fields input,.settings-fields select { width:100%;height:38px;border:1px solid #ccd0d8;border-radius:5px;background:#fff;padding:4px 10px;font-size:18px }
+.settings-fields label span { font-size:15px;color:#777;text-align:left }
+.settings-reset { position:absolute;right:46px;bottom:30px;background:#e4e4e6;border-radius:5px;padding:8px 20px;font-size:16px }
+.theme-choices { display:grid;grid-template-columns:repeat(3,minmax(170px,1fr));gap:22px;max-width:1050px;margin:60px auto 0 }
+.theme-choices button { display:flex;flex-direction:column;gap:9px;text-align:left;font-size:17px;border:2px solid transparent;border-radius:8px;padding:4px }
+.theme-choices button.selected { border-color:#3679ec }
+.theme-preview { display:block;width:100%;height:205px;border:1px solid #d2d6df;border-radius:7px;padding:24px;font:27px/2 Georgia,serif;overflow:hidden }
+.theme-paper { background:#fff;color:#188fc5 }.theme-sepia { background:#fff7e4;color:#a45a38 }.theme-dark { background:#343633;color:#cfdbdd }
+#settingsStorage button { display:block;margin:14px 0;padding:9px 16px;background:#ededf0;border-radius:5px }
+#settingsStorage p,#settingsAdvanced p { color:#777 }
+.advanced-fields{display:grid;grid-template-columns:96px 112px auto;align-items:center;gap:10px;width:min(380px,100%);margin:8px 0 0;font-size:13px}
+.advanced-fields label{font-size:13px;text-align:right}
+.advanced-fields input{width:112px;height:32px;padding:3px 8px;border:1px solid #ccd0d8;border-radius:5px;font-size:13px}
+.advanced-fields span{font-size:12px;color:var(--muted)}
+#settingsAdvanced>p{margin:9px 0 0 106px;font-size:12px;line-height:1.55}
+.editor h1 { font-size:var(--h1-size,31px) }.editor h2 { font-size:var(--h2-size,26px) }.editor h3 { font-size:var(--h3-size,22px) }
+@media(max-width:720px){.settings-dialog{grid-template-columns:160px 1fr}.settings-nav button{font-size:14px;padding:12px}.settings-main{padding:44px 22px}.settings-fields label{grid-template-columns:100px 1fr 40px;font-size:14px}.theme-choices{grid-template-columns:1fr 1fr}}
+
+.library-location-setting{width:min(620px,100%);margin:26px auto 0;display:grid;grid-template-columns:160px minmax(0,1fr) auto;gap:10px 12px;align-items:center;font-size:18px}
+.library-location-setting>label{text-align:right}
+.library-location-setting input{min-width:0;height:38px;border:1px solid #ccd0d8;border-radius:5px;background:#f5f5f6;padding:4px 10px;color:#64676b;font-size:14px}
+.library-location-setting button{height:38px;padding:0 14px;border-radius:5px;background:#e4e4e6}
+.library-location-setting p{grid-column:2/4!important;margin:0!important;font-size:14px}
+.library-migration-progress{width:min(460px,100%);margin:22px auto 0;padding:14px 16px;border:1px solid #ccd0d8;border-radius:7px;background:#f7f8fa}
+.library-migration-progress>div{display:flex;justify-content:space-between;gap:12px;font-size:14px;color:#59616c}
+.library-migration-progress i{display:block;height:6px;margin-top:10px;overflow:hidden;border-radius:5px;background:#d9dde3}
+.library-migration-progress b{display:block;width:0;height:100%;border-radius:inherit;background:#377df4;transition:width .18s ease}
+.library-migration-progress.hidden{display:none}
+/* 文稿库迁移在高级页左侧对齐，不与阅读速度字段共用缩进。 */
+.library-location-setting{width:100%;margin:26px 0 0;display:block;font-size:15px}
+.library-location-head{display:flex;align-items:baseline;justify-content:space-between;gap:12px;margin-bottom:8px}
+.library-location-head label{font-size:16px;color:var(--text)}
+#libraryLocationSize{font-size:12px;color:var(--muted);white-space:nowrap}
+.library-location-row{display:flex;gap:10px;align-items:center}
+.library-location-row input{flex:1;min-width:0;height:34px;border:1px solid var(--line);border-radius:5px;background:color-mix(in srgb,var(--paper) 88%,var(--nav));padding:4px 9px;color:var(--text);font-size:12px}
+.library-location-row button{height:34px;flex:none;padding:0 12px;border-radius:5px;background:var(--sel);font-size:13px}
+.library-location-setting>#libraryLocationNote{margin:7px 0 0!important;font-size:12px;color:var(--muted)}
+.library-migration-progress{width:100%;margin:16px 0 0;background:color-mix(in srgb,var(--paper) 86%,var(--nav))}

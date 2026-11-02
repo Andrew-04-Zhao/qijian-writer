@@ -1,0 +1,17 @@
+.folder-chevron{display:inline-flex;align-items:center;justify-content:center;flex:none;width:16px;height:20px;color:#7f8588;font-size:14px;line-height:1}
+.folder-chevron.empty{display:inline-flex;width:16px;height:20px;min-height:0;place-content:unset;color:transparent}
+.trash-folder-tree{padding:3px 8px 9px;max-height:36vh;overflow:auto}
+.trash-folder-row{font-size:13px;color:#64676a}
+.word-stats{position:fixed;right:16px;top:38px;z-index:145;width:184px;background:#fff;border:1px solid #c9cbd0;border-radius:12px;box-shadow:0 12px 28px #0002;padding:12px 22px 20px;color:#47515e;text-align:center}
+.word-stats-close{position:absolute;right:5px;top:1px;width:24px;height:24px;color:#89929b;font-size:20px;line-height:1}
+.word-stats-close:hover{color:#222}
+.word-stat{padding:13px 0 11px;border-bottom:1px solid #e0e2e5}
+.word-stat:last-child{border-bottom:0}
+.word-stat strong{display:block;font-size:27px;font-weight:400;line-height:1.2;font-variant-numeric:tabular-nums}
+.word-stat span{display:block;font-size:17px;color:#838b93;margin-top:2px}
+.advanced-fields{display:flex;align-items:center;gap:12px;max-width:540px;margin:55px auto 0;font-size:18px}
+.advanced-fields label{min-width:105px;text-align:right}
+.advanced-fields input{width:120px;height:40px;border:1px solid #ccd0d8;border-radius:5px;padding:5px 9px;font-size:18px}
+.advanced-fields span{color:#6f7780;font-size:15px}
+#settingsAdvanced>p{margin:18px auto;max-width:420px}
+@media print{.word-stats{display:none!important}}

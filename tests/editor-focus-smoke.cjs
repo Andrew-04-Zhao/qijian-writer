@@ -1,0 +1,164 @@
+const {app,BrowserWindow,clipboard,nativeImage}=require('electron');
+const fs=require('fs'),os=require('os'),path=require('path'),crypto=require('crypto'),assert=require('assert');
+const {pathToFileURL,fileURLToPath}=require('url');
+const root=fs.mkdtempSync(path.join(os.tmpdir(),'qijian-focus-regression-'));
+const userData=path.join(root,'user-data');fs.mkdirSync(userData);app.setPath('userData',userData);
+const attachments=path.join(root,'attachments','doc-a');fs.mkdirSync(attachments,{recursive:true});
+const png=Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=','base64');
+const imagePath=path.join(attachments,'audit.png');fs.writeFileSync(imagePath,png);
+const imageUrl=pathToFileURL(imagePath).href,stamp=new Date().toISOString();
+const contentA='<p>Alpha text before image.</p><div class="image-row"><figure class="editor-image" data-image-id="audit-a" style="width:150px"><img src="'+imageUrl+'" alt="Audit image"></figure></div><p>Alpha text after image.</p>';
+const contentC='<h2>Mixed heading</h2><p>Body <strong>bold</strong> <em>italic</em></p><ul><li><p>Outline parent</p><div class="image-row"><figure class="editor-image" style="width:150px"><img src="'+imageUrl+'" alt="Nested image"></figure></div><ul><li><p>Outline child</p></li></ul></li></ul><p>Inline <span class="editor-formula formula-inline" data-latex="x_i">x_i</span></p><table><tr><td>A</td><td>B</td></tr></table><div class="editor-formula formula-block" data-latex="x^2+y^2">x^2+y^2</div><p>End.</p>';
+const contentE='<p>Two images</p><div class="image-row"><figure class="editor-image" style="width:150px"><img src="'+imageUrl+'" alt="Left"></figure><figure class="editor-image" style="width:150px"><img src="'+imageUrl+'" alt="Right"></figure></div><p>After.</p>';
+const initial={nodes:['a','b','c','d','e'].map((id,i)=>({id,type:'document',title:'Audit '+id,parentId:null,order:i,content:[contentA,'<p>Beta paste target.</p>',contentC,'<p></p>',contentE][i],contentJson:null,versions:[],createdAt:stamp,updatedAt:stamp,deletedAt:null})),activeId:'a',settings:{},documentNormalizationVersion:8,historyResetVersion:1,historyPolicyVersion:1,writeRevision:0};
+fs.writeFileSync(path.join(root,'library.json'),JSON.stringify(initial));
+const srcFiles=['src/main.js','src/preload.js','src/renderer/app.js','src/renderer/enhancements.js','src/renderer/editor-core-source.js','src/renderer/editor-core.bundle.js','src/renderer/editor-core.css'];
+const hashes=()=>Object.fromEntries(srcFiles.map(f=>[f,crypto.createHash('sha256').update(fs.readFileSync(f)).digest('hex')]));
+const beforeHashes=hashes();
+const report={root,states:[],clipboard:[],checks:{},errors:[]};
+let previousClipboard,lastClipboardFingerprint;
+const fingerprint=()=>crypto.createHash('sha256').update(clipboard.availableFormats().map(f=>f+':'+crypto.createHash('sha256').update(clipboard.readBuffer(f)).digest('hex')).join('|')).digest('hex');
+process.env.QIJIAN_TEST_LIBRARY_ROOT=root;process.env.QIJIAN_TEST_DETACHED='1';require(process.env.QIJIAN_TEST_APP||'../src/main.js');
+const wait=ms=>new Promise(resolve=>setTimeout(resolve,ms));
+const waitFor=async(fn,label)=>{for(let i=0;i<120;i++){try{const value=await fn();if(value)return value}catch(_){}await wait(50)}throw new Error('Timed out: '+label)};
+app.whenReady().then(async()=>{
+ let exitCode=0;
+ try{
+  previousClipboard={text:clipboard.readText(),html:clipboard.readHTML(),rtf:clipboard.readRTF(),image:clipboard.readImage()};
+  const win=await waitFor(()=>BrowserWindow.getAllWindows().find(w=>w.webContents.getURL().includes('index.html')),'main window');
+  const run=code=>win.webContents.executeJavaScript(code);
+  await waitFor(()=>run('!!activeDoc&&!!window.qijianEditor?.enabled'),'editor ready');
+  win.show();win.focus();await wait(300);
+  await run('window.__auditEvents=[];for(const type of ["copy","paste","cut","keydown"]){document.addEventListener(type,e=>window.__auditEvents.push({type,key:e.key,target:e.target.id||e.target.tagName,types:[...(e.clipboardData?.types||[])]}),true)}');
+  const state=async label=>{
+   const data=await run('(()=>{const v=qijianEditor.view,s=v.state.selection,a=document.activeElement,d=getSelection();return {activeDoc:activeDoc.id,activeElement:{tag:a.tagName,id:a.id,className:a.className},documentFocus:document.hasFocus(),editorFocus:v.hasFocus(),selection:{type:s.constructor.name,from:s.from,to:s.to,node:s.node?.type.name},domSelection:{anchor:d?.anchorNode?.parentElement?.tagName,inEditor:!!d?.anchorNode&&v.dom.contains(d.anchorNode),collapsed:d?.isCollapsed},inert:document.body.inert,writesSuspended:libraryWritesSuspended,restoring:libraryRestoreInProgress,images:[...document.querySelectorAll("#editor img[src]")].map(i=>({src:i.src,loaded:i.complete&&i.naturalWidth>0})),text:v.state.doc.textContent,events:window.__auditEvents.splice(0)}})()');
+   report.states.push({label,...data});console.log(JSON.stringify({label,...data}));return data;
+  };
+  const click=async(selector,target=win,offset={})=>{
+   const p=await target.webContents.executeJavaScript('(()=>{const el=document.querySelector('+JSON.stringify(selector)+');if(!el)throw Error("Missing click target");el.scrollIntoView({block:"nearest"});const r=el.getBoundingClientRect();return {x:Math.round(r.left+'+(offset.x===undefined?'r.width/2':offset.x)+'),y:Math.round(r.top+'+(offset.y===undefined?'r.height/2':offset.y)+'),w:r.width,h:r.height}})()');
+   if(p.w<=0||p.h<=0)throw Error('Hidden click target '+selector);
+   target.webContents.sendInputEvent({type:'mouseMove',x:p.x,y:p.y});
+   target.webContents.sendInputEvent({type:'mouseDown',x:p.x,y:p.y,button:'left',clickCount:1});
+   target.webContents.sendInputEvent({type:'mouseUp',x:p.x,y:p.y,button:'left',clickCount:1});await wait(160);
+  };
+  const key=async(keyCode,modifiers=[])=>{win.webContents.sendInputEvent({type:'keyDown',keyCode,modifiers});win.webContents.sendInputEvent({type:'keyUp',keyCode,modifiers});await wait(140)};
+  const typeChar=async c=>{win.webContents.sendInputEvent({type:'keyDown',keyCode:c});win.webContents.sendInputEvent({type:'char',keyCode:c});win.webContents.sendInputEvent({type:'keyUp',keyCode:c});await wait(140)};
+  const clip=label=>{lastClipboardFingerprint=fingerprint();const data={label,formats:clipboard.availableFormats(),hasFixtureImage:clipboard.readHTML().includes('audit.png'),sentinel:clipboard.readText()==='QIJIAN_AUDIT_SENTINEL'};report.clipboard.push(data);console.log(JSON.stringify(data));return data};
+  const resetClipboard=()=>{clipboard.writeText('QIJIAN_AUDIT_SENTINEL');lastClipboardFingerprint=fingerprint()};
+  const card=id=>click('.doc-card[data-node-id="'+id+'"]');
+  const textClick=()=>click('#editor > p',win,{x:40});
+  const imageClick=()=>click('#editor figure.editor-image img');
+  const copy=async label=>{await key('C',['control']);return clip(label)};
+  const paste=async()=>{await key('V',['control']);await wait(500)};
+  await state('initial');
+  await card('b');await card('a');resetClipboard();
+  await imageClick();const unfocusedImage=await state('A image click immediately after document card');
+  const failedCopy=await copy('copy after direct image click');await state('after attempted copy without editor focus');
+  report.checks.imageClickFocusesEditor=unfocusedImage.editorFocus&&unfocusedImage.selection.node==='image_item';
+  report.checks.copyWorksDirectlyAfterCard=!failedCopy.sentinel&&failedCopy.hasFixtureImage;
+  // Leave the editor via a real input so card focus cannot mask image click behavior.
+  await click('#search');await imageClick();const fromSearch=await state('image clicked from search input');
+  const searchCopy=await copy('copy image directly after search');
+  report.checks.imageClickAcquiresFocusFromAnotherInput=fromSearch.editorFocus&&searchCopy.hasFixtureImage;
+  await textClick();await imageClick();const focusedImage=await state('A text click then image click');
+  const goodCopy=await copy('copy after text then image');await state('after copy with editor focus');
+  report.checks.copyWorksAfterTextFocus=focusedImage.editorFocus&&goodCopy.hasFixtureImage;
+  await card('b');const switched=await state('switch B after successful image copy');
+  await paste();const withoutClick=await state('paste B without clicking editor');
+  report.checks.pasteWorksImmediatelyAfterSwitch=switched.editorFocus&&withoutClick.images.length===1;
+  await textClick();await paste();const withClick=await state('paste B after clicking text');
+  report.checks.pasteWorksAfterTextClick=withClick.images.length===2&&withClick.images.every(i=>i.loaded&&i.src.includes('/doc-b/')&&fs.existsSync(fileURLToPath(i.src)));
+  report.checks.copyCreatesIndependentOwnedImage=withClick.images.length===2&&withClick.images.every(i=>i.src!==imageUrl&&i.src.includes('/doc-b/'))&&new Set(withClick.images.map(i=>i.src)).size===2;
+  await card('a');await textClick();await imageClick();await state('focused image before arrow navigation');
+  await key('Right');const arrow=await state('right arrow after focused image');
+  report.checks.focusedImageArrowReturnsCaret=arrow.editorFocus&&arrow.selection.type.includes('TextSelection');
+  await card('b');await card('a');await imageClick();await key('Right');const badArrow=await state('right arrow after unfocused image');
+  report.checks.imageArrowAfterSwitchRestoresCaret=badArrow.editorFocus&&badArrow.selection.type.includes('TextSelection');
+  await textClick();const recovered=await state('text click after unfocused image');
+  report.checks.clickingTextRestoresCaret=recovered.editorFocus&&recovered.selection.type.includes('TextSelection');
+  const oldText=recovered.text;await typeChar('z');await wait(900);const autoSave=await state('typing and autosave');
+  report.checks.autosaveKeepsEditorFocus=autoSave.editorFocus&&autoSave.text!==oldText;
+  // Backup through actual file menu, preserving its normal focus behavior.
+  win.webContents.sendInputEvent({type:'mouseMove',x:180,y:3});await wait(180);
+  await click('.menus [data-menu="file"]');await state('file menu opened');
+  const menuBackupIndex=await run('[...document.querySelectorAll("#menuPopup button")].findIndex(b=>b.textContent==="立即备份")');
+  await click('#menuPopup button:nth-of-type('+(menuBackupIndex+1)+')');
+  const backupPath=path.join(root,'backups','library-manual.qijian-backup.gz');
+  await waitFor(()=>fs.existsSync(backupPath),'manual backup');await wait(350);
+  const afterBackup=await state('after file menu backup');await typeChar('y');const afterBackupTyped=await state('typing immediately after file backup');
+  report.checks.fileBackupKeepsTyping=afterBackup.editorFocus&&afterBackupTyped.text!==afterBackup.text;
+  report.checks.fileBackupDoesNotDisableInput=!afterBackup.inert&&!afterBackup.writesSuspended&&!afterBackup.restoring;
+  await textClick();await typeChar('x');const afterBackupClick=await state('click text and type after file backup');
+  report.checks.textClickRecoversAfterFileBackup=afterBackupClick.editorFocus&&afterBackupClick.text!==afterBackup.text;
+  win.webContents.sendInputEvent({type:'mouseMove',x:180,y:3});await wait(180);await click('.menus [data-menu="file"]');
+  const settingsIndex=await run('[...document.querySelectorAll("#menuPopup button")].findIndex(b=>b.textContent==="设置")');
+  await click('#menuPopup button:nth-of-type('+(settingsIndex+1)+')');
+  const popup=await waitFor(()=>BrowserWindow.getAllWindows().find(w=>w!==win&&w.webContents.getURL()==='about:blank'),'settings popup');
+  await wait(250);popup.show();popup.focus();await wait(180);
+  await click('[data-settings-tab="storage"]',popup);const beforeBackupTime=fs.statSync(backupPath).mtimeMs;
+  await click('#backupFromSettings',popup);await waitFor(()=>fs.statSync(backupPath).mtimeMs>beforeBackupTime,'settings backup');
+  await click('#closeSettings',popup);await waitFor(()=>popup.isDestroyed(),'settings closed');await wait(250);
+  const afterSettings=await state('after settings backup and close');await typeChar('w');const settingsTyped=await state('typing immediately after settings close');
+  report.checks.settingsBackupCloseRestoresTyping=afterSettings.editorFocus&&settingsTyped.text!==afterSettings.text;
+  await textClick();const settingsRecovered=await state('text click after settings close');report.checks.textClickRecoversAfterSettings=settingsRecovered.editorFocus;
+  report.checks.productionFilesUnchanged=JSON.stringify(beforeHashes)===JSON.stringify(hashes());
+  // A slow backup must respect subsequent user input and document switches.
+  await wait(700);
+  await run('window.__savedFlushSave=flushSave;window.__delayNextBackupSave=true;flushSave=async(...args)=>{if(window.__delayNextBackupSave){window.__delayNextBackupSave=false;await new Promise(resolve=>window.__releaseBackup=resolve)}return window.__savedFlushSave(...args)};true');
+  const openMenuAction=async label=>{
+   win.webContents.sendInputEvent({type:'mouseMove',x:180,y:3});await wait(160);await click('.menus [data-menu="file"]');
+   const index=await run('[...document.querySelectorAll("#menuPopup button")].findIndex(b=>b.textContent==='+JSON.stringify(label)+')');
+   await click('#menuPopup button:nth-of-type('+(index+1)+')');
+  };
+  const startDelayedBackup=async()=>{
+   await run('window.__delayNextBackupSave=true;window.__releaseBackup=null');
+   const time=fs.statSync(backupPath).mtimeMs;await openMenuAction('立即备份');
+   await waitFor(()=>run('!!window.__releaseBackup'),'backup waiting');return time;
+  };
+  const finishDelayedBackup=async time=>{await run('window.__releaseBackup();true');await waitFor(()=>fs.statSync(backupPath).mtimeMs>time,'delayed backup complete');await wait(200)};
+  let time=await startDelayedBackup();await click('#search');await typeChar('a');
+  const beforeSearchFinish=await state('search while backup pending');await finishDelayedBackup(time);
+  const afterSearchFinish=await state('search after backup finished');
+  report.checks.backupCompletionDoesNotStealSearchFocus=afterSearchFinish.activeElement.id==='search'&&afterSearchFinish.text===beforeSearchFinish.text;
+  // The same active card must also bring input back to its document.
+  await card('a');report.checks.activeCardRestoresFocus=(await state('click current document card')).editorFocus;
+  time=await startDelayedBackup();await card('b');await typeChar('q');const beforeSwitchFinish=await state('new document while backup pending');
+  await finishDelayedBackup(time);const afterSwitchFinish=await state('new document after backup finished');
+  report.checks.backupCompletionDoesNotChangeNewDocumentSelection=afterSwitchFinish.activeDoc==='b'&&afterSwitchFinish.editorFocus&&JSON.stringify(beforeSwitchFinish.selection)===JSON.stringify(afterSwitchFinish.selection);
+  await run('flushSave=window.__savedFlushSave;true');
+  await card('a');await textClick();const beforeDialog=await state('before settings close selection check');
+  await openMenuAction('设置');let other=await waitFor(()=>BrowserWindow.getAllWindows().find(w=>w!==win&&w.webContents.getURL()==='about:blank'),'settings reopen');
+  await wait(200);await click('#closeSettings',other);await waitFor(()=>other.isDestroyed(),'settings close');await wait(150);
+  const afterDialog=await state('after settings close selection check');
+  report.checks.settingsClosePreservesCaret=afterDialog.editorFocus&&JSON.stringify(beforeDialog.selection)===JSON.stringify(afterDialog.selection);
+  await openMenuAction('设置');other=await waitFor(()=>BrowserWindow.getAllWindows().find(w=>w!==win&&w.webContents.getURL()==='about:blank'),'settings reopen for search');await wait(200);
+  win.focus();await click('#search');other.focus();await click('#closeSettings',other);await waitFor(()=>other.isDestroyed(),'settings close after search');await wait(150);
+  report.checks.dialogCloseDoesNotStealSearchFocus=(await state('settings close after main search interaction')).activeElement.id==='search';
+  // Copy a whole mixed document through native keys, including an image inside an outline.
+  await card('c');
+  const canonical=()=>run('(()=>{const json=JSON.parse(JSON.stringify(qijianEditor.getDocumentJSON()));const walk=n=>{if(n.type==="image_item"){delete n.attrs.src;delete n.attrs.id}(n.content||[]).forEach(walk)};walk(json);return JSON.stringify(json)})()');
+  const mixedSource=await canonical();await key('A',['control']);await copy('native mixed document copy');
+  await card('d');await paste();const mixedPasted=await state('native mixed document paste');
+  const mixedResult=await canonical();
+  report.checks.nativeMixedDocumentStructurePreserved=mixedSource===mixedResult;
+  report.checks.nativeMixedOutlineImageOwned=mixedPasted.images.length===1&&mixedPasted.images.every(i=>i.loaded&&i.src.includes('/doc-d/'));
+  await key('Z',['control']);report.checks.nativeMixedPasteSingleUndo=await run('qijianEditor.view.state.doc.textContent===""&&!document.querySelector("#editor img")');
+  await key('Y',['control']);await wait(150);report.checks.nativeMixedPasteRedo=(await canonical())===mixedResult;
+  await click('#search');await click('#editor li figure img');const nested=await state('nested image clicked after search');
+  await key('X',['control']);clip('cut nested image');const cut=await state('nested image cut');
+  report.checks.nativeNestedImageCut=nested.editorFocus&&nested.selection.node==='image_item'&&cut.images.length===0;
+  await key('Z',['control']);await wait(150);report.checks.nativeNestedImageCutUndo=(await canonical())===mixedResult;
+  await card('e');const pairBefore=await canonical();await click('#editor img[alt="Left"]');await key('X',['control']);clip('cut one of two images');
+  report.checks.cutKeepsOtherImageInSameRow=await run('document.querySelectorAll("#editor figure").length===1&&document.querySelector("#editor img").alt==="Right"');
+  await key('Z',['control']);report.checks.cutPairUndoRestoresBoth=(await canonical())===pairBefore;
+  report.mixed={source:mixedSource,result:mixedResult};
+  console.log('CHECKS '+JSON.stringify(report.checks));
+  assert.deepStrictEqual(Object.entries(report.checks).filter(([,passed])=>!passed),[],'Focus regressions');
+ }catch(error){report.errors.push(error.stack);console.error(error);exitCode=1}
+ finally{
+  report.productionFilesUnchanged=JSON.stringify(beforeHashes)===JSON.stringify(hashes());
+  try{if(previousClipboard&&lastClipboardFingerprint===fingerprint())clipboard.write(previousClipboard)}catch(error){report.errors.push('Clipboard restore: '+error.message)}
+  fs.writeFileSync(path.join(__dirname,'../dist/diagnostics/editor-focus-report.json'),JSON.stringify(report,null,2));
+  app.exit(exitCode);
+ }
+});

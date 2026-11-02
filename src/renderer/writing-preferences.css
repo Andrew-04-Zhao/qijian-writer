@@ -1,0 +1,10 @@
+.spellcheck-dialog{position:fixed;z-index:180;left:50%;top:50%;transform:translate(-50%,-50%);width:min(520px,calc(100vw - 32px));max-height:calc(100vh - 48px);display:flex;flex-direction:column;padding:20px;background:var(--paper);color:var(--text);border:1px solid var(--line);border-radius:12px;box-shadow:0 12px 45px #0003;font:13px/1.5 "Microsoft YaHei","Segoe UI",sans-serif}
+.spellcheck-dialog header{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.spellcheck-dialog h2{font-size:17px;margin:0}.spellcheck-dialog header button{font-size:23px;color:var(--muted);line-height:1;padding:2px 6px}
+.spellcheck-dialog p{margin:8px 0 12px;color:var(--muted)}
+#spellcheckLanguageSearch{flex:none;width:100%;height:34px;padding:6px 10px;background:var(--paper);color:var(--text);border:1px solid var(--line);border-radius:6px;outline-offset:2px}
+.spellcheck-language-list{display:grid;grid-template-columns:1fr 1fr;gap:3px 10px;overflow:auto;min-height:80px;max-height:295px;margin:12px 0;padding-right:4px;scrollbar-gutter:stable}
+.spellcheck-language{display:grid;grid-template-columns:18px 1fr;gap:0 7px;align-items:center;border-radius:6px;padding:6px;cursor:pointer}
+.spellcheck-language:hover{background:var(--sel)}.spellcheck-language input{grid-row:1/3;margin:0;accent-color:var(--accent)}.spellcheck-language span{font-size:13px}.spellcheck-language small{color:var(--muted);font:10px/1.4 "Segoe UI",sans-serif}
+.spellcheck-dialog #spellcheckError,.spellcheck-dialog .is-error{color:#c64d42}.spellcheck-dialog #spellcheckError:empty,.spellcheck-dialog #spellcheckDownloadStatus:empty{display:none}
+.spellcheck-dialog footer{display:flex;gap:9px;justify-content:flex-end;padding-top:10px;border-top:1px solid var(--line)}.spellcheck-dialog footer button{padding:6px 18px;border-radius:6px;background:var(--sel)}.spellcheck-dialog footer .primary-action{background:var(--accent);color:white}

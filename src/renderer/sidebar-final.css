@@ -1,0 +1,112 @@
+.folder-row{padding-left:calc(5px + var(--tree-depth,0)*9px)}
+.sidebar-search{height:29px;min-height:29px;display:grid;grid-template-columns:14px 17px minmax(0,1fr);column-gap:6px;align-items:center;padding:3px 5px;margin:0 0 4px;border-radius:5px;cursor:text}
+.sidebar-search .nav-icon{display:flex;align-items:center;justify-content:center;width:17px;height:19px}
+.sidebar-search .search-icon{width:17px;height:17px}
+.sidebar-search.active{background:rgba(255,255,255,.45)}
+.documents{background:var(--nav)}
+.documents .doc-card{background:var(--list)}
+.documents .doc-card:hover,.documents .doc-card.active{background:var(--sel)}
+
+
+/* Denser library columns and fixed document previews. */
+#app{grid-template-columns:210px 300px 1fr}
+.folders{padding-left:7px;padding-right:7px}
+.folders .brand{padding-bottom:10px}
+.folders .brand b{font-size:14px}
+.folders nav>button,.folder-row{min-height:25px;font-size:11px;line-height:1.2;padding-top:2px;padding-bottom:2px}
+.sidebar-search{height:25px;min-height:25px;font-size:11px;line-height:1.2}
+.sidebar-search input{font-size:11px;line-height:1.2}
+.folders nav i,.aside-bottom button{font-size:10px}
+.folder-tree{line-height:1.2}
+.documents .doc-list{padding:31px 9px 18px}
+.documents .doc-card{display:flex;flex-direction:column;aspect-ratio:2.2 / 1;min-height:0;padding:10px 11px;margin:4px 0;font-size:11px;overflow:hidden}
+.documents .doc-card h3{margin:0 0 4px;color:var(--text);font-size:12px;font-weight:700;line-height:1.35;white-space:normal;overflow-wrap:anywhere;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden}
+.documents .doc-card p{margin:0;color:var(--text);font-size:11px;line-height:1.38;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:3;overflow:hidden}
+.documents .doc-card time{margin-top:auto;padding-top:4px;color:var(--muted);font-size:9.5px;line-height:1.15}
+.folders-collapsed{grid-template-columns:0 300px 1fr}
+.docs-collapsed{grid-template-columns:210px 0 1fr}
+.folders-collapsed.docs-collapsed{grid-template-columns:0 0 1fr}
+.collapse-docs{left:490px}
+.folders-collapsed .collapse-docs{left:280px}
+
+
+/* Override the shared non-document typography at the compact rail. */
+#app .folders nav>button,#app .folder-row,#app .folders .rail-label,#app .folders .folder-chevron,#app .sidebar-search,#app .sidebar-search input{font-size:11px;line-height:1.2}
+#app .folders nav i,#app .aside-bottom button{font-size:10px;line-height:1.2}
+#app .documents .doc-card{font-size:10.5px;line-height:1.3}
+#app .documents .doc-card h3{font-size:11.5px;line-height:1.3}
+#app .documents .doc-card p{font-size:10.5px;line-height:1.32}
+#app .documents .doc-card time{font-size:9.5px;line-height:1.15}
+#app .folders.folders nav>button,#app .folders .folder-row.folder-row{font-size:11px;line-height:1.2}
+#app .folders .sidebar-search input{font-size:11px;line-height:1.2}
+
+
+/* Both library columns at 75% of their previous widths. */
+#app{grid-template-columns:158px 225px 1fr}
+.folders-collapsed{grid-template-columns:0 225px 1fr}
+.docs-collapsed{grid-template-columns:158px 0 1fr}
+.folders-collapsed.docs-collapsed{grid-template-columns:0 0 1fr}
+.collapse-docs{left:363px}
+.folders-collapsed .collapse-docs{left:205px}
+
+
+/* Document selection and semantic first-line titles. */
+#app .documents .doc-card .doc-title{margin:0 0 4px;color:var(--text);font-size:11.5px;font-weight:400;line-height:1.3;white-space:normal;overflow-wrap:anywhere;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden}
+#app .documents .doc-card .doc-title.is-heading{font-weight:700}
+#app .documents .doc-card.active{background:#377df4;color:#fff}
+#app .documents .doc-card.active .doc-title,#app .documents .doc-card.active p,#app .documents .doc-card.active time{color:#fff}
+
+
+/* Keep the document-rail handle pinned to the viewport while the editor scrolls. */
+#app .writing #collapseDocs,#app .writing #expandDocs{position:fixed;top:50vh;transform:translateY(-50%)}
+#app .writing #collapseDocs{left:383px}
+#app.folders-collapsed .writing #collapseDocs{left:225px}
+#app .writing #expandDocs{left:158px}
+#app.folders-collapsed .writing #expandDocs{left:0}
+
+
+/* Calm hover, explicit selection, and drag placement feedback. */
+#app .documents .doc-card{transform:scale(1);transform-origin:center;transition:transform .14s ease,box-shadow .14s ease,background-color .14s ease;will-change:transform}
+#app .documents .doc-card{overflow:visible}
+#app .documents .doc-card:hover:not(.dragging){transform:scale(1.018);z-index:1;background:var(--list)}
+#app .documents .doc-card.active,#app .documents .doc-card.active:hover{background:#377df4}
+#app.document-editing .documents .doc-card.active,#app.document-editing .documents .doc-card.active:hover{background:color-mix(in srgb,var(--nav) 76%,var(--text) 24%)}
+#app.document-editing .documents .doc-card.active .doc-title,#app.document-editing .documents .doc-card.active p{color:var(--text)}
+#app.document-editing .documents .doc-card.active time{color:var(--muted)}
+#app .folders .folder-row.active,#app .folders .folder-row.active:hover{background:color-mix(in srgb,var(--nav) 76%,var(--text) 24%)}
+#app .doc-card.dragging,#app .folder-row.dragging{opacity:1!important;box-shadow:inset 0 0 0 2px #377df4;z-index:3}
+#app .drop-before::before,#app .drop-after::after{background:#377df4}
+#app .folder-row.drop-target{outline:0!important;background:color-mix(in srgb,var(--nav) 75%,#377df4 25%)!important}
+
+
+/* Wider document-card rhythm and centered insertion cue. */
+#app .documents .doc-card{margin:8px 0}
+#app .documents .doc-card.drop-before::before{top:-5px;background:#377df4!important}
+#app .documents .doc-card.drop-after::after{bottom:-5px;background:#377df4!important}
+#app .drop-before::before,#app .drop-after::after{background:#377df4!important}
+
+
+/* High-contrast insertion cue: exactly matches the dragged-item frame. */
+#app .drop-before::before,#app .drop-after::after{height:3px!important;background:#377df4!important;box-shadow:none!important;opacity:1!important}
+
+/* 顶部主菜单悬浮时不占用文稿库的垂直空间。 */
+#app .folders{padding-top:8px}
+#app .documents .doc-list{padding-top:6px}
+
+/* 中间文稿栏和右侧编辑区使用窄滚动条，轨道保持原背景。 */
+#app .documents .doc-list,#app .writing{scrollbar-width:auto;scrollbar-color:auto}
+#app .documents .doc-list::-webkit-scrollbar,#app .writing::-webkit-scrollbar{width:5px;height:5px}
+#app .documents .doc-list::-webkit-scrollbar-track,#app .writing::-webkit-scrollbar-track{background:transparent}
+#app .documents .doc-list::-webkit-scrollbar-thumb,#app .writing::-webkit-scrollbar-thumb{background:transparent;border-radius:5px;transition:background-color .16s ease}
+#app .documents .doc-list.scrollbar-active::-webkit-scrollbar-thumb,#app .writing.scrollbar-active::-webkit-scrollbar-thumb{background:color-mix(in srgb,var(--muted) 64%,transparent)}
+#app .documents .doc-list.scrollbar-active::-webkit-scrollbar-thumb:hover,#app .writing.scrollbar-active::-webkit-scrollbar-thumb:hover{background:color-mix(in srgb,var(--muted) 82%,transparent)}
+#app .documents .doc-list::-webkit-scrollbar-corner,#app .writing::-webkit-scrollbar-corner{background:transparent}
+#app .documents .doc-list::-webkit-scrollbar-button,#app .writing::-webkit-scrollbar-button,#app .documents .doc-list::-webkit-scrollbar-button:single-button,#app .writing::-webkit-scrollbar-button:single-button{-webkit-appearance:none;appearance:none;display:none;width:0;height:0;min-width:0;min-height:0;background:transparent}
+
+#emptyState{gap:12px;color:var(--muted)}
+#emptyState p{margin:0;font-size:13px}
+#emptyState button{justify-self:center;padding:6px 12px;border:1px solid color-mix(in srgb,var(--muted) 45%,transparent);border-radius:5px;color:var(--muted);background:color-mix(in srgb,var(--paper) 80%,var(--nav))}
+#emptyState button:hover{color:var(--text);border-color:var(--muted)}
+
+/* Reserve the scrollbar width so cards never resize when the list starts scrolling. */
+#app .documents .doc-list{overflow-x:hidden;overflow-y:scroll;scrollbar-gutter:stable;padding-right:3px;padding-left:9px}

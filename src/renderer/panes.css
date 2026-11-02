@@ -1,0 +1,19 @@
+#app { grid-template-columns:185px 225px minmax(0,1fr) }
+#app.folders-collapsed { grid-template-columns:0 225px minmax(0,1fr) }
+#app.docs-collapsed { grid-template-columns:185px 0 minmax(0,1fr) }
+#app.folders-collapsed.docs-collapsed { grid-template-columns:0 0 minmax(0,1fr) }
+.folders { overflow:hidden;padding-left:8px;padding-right:8px }
+#collapseFolders,#expandFolders,#collapseDocs,#expandDocs{display:none!important}
+.pane-cycle{display:grid!important;place-items:center;width:30px;padding:0!important;color:#70777c}
+.pane-cycle svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:1;stroke-linejoin:round}
+.pane-cycle .pane-cycle-fill{fill:currentColor;stroke:none;opacity:.36}
+.pane-cycle:hover{background:var(--sel);color:var(--text)}
+.documents { overflow:hidden }
+.doc-card { padding:11px 9px;min-height:68px }
+.list-head { padding-left:8px;padding-right:8px }
+.writing .collapse-docs,.writing #expandDocs { position:absolute;left:0;top:50%;z-index:5;width:18px;height:50px;background:var(--list);border-radius:0 8px 8px 0;color:var(--muted) }
+.writing .collapse-docs:hover,.writing #expandDocs:hover,.documents #expandFolders:hover { background:var(--sel);color:var(--text) }
+.documents #expandFolders { left:0;top:50% }
+#app.docs-collapsed .documents { visibility:hidden }
+#app.folders-collapsed .folders { visibility:hidden }
+@media(max-width:900px){#app{grid-template-columns:150px 190px minmax(0,1fr)}#app.folders-collapsed{grid-template-columns:0 190px minmax(0,1fr)}#app.docs-collapsed{grid-template-columns:150px 0 minmax(0,1fr)}#app.folders-collapsed.docs-collapsed{grid-template-columns:0 0 minmax(0,1fr)}.writing .collapse-docs{display:block}}

@@ -1,0 +1,54 @@
+const {app,BrowserWindow,ipcMain,dialog,net,nativeImage}=require('electron');
+const fs=require('fs'),path=require('path'),os=require('os'),assert=require('assert/strict');const {pathToFileURL}=require('url');
+const root=fs.mkdtempSync(path.join(os.tmpdir(),'qijian-memory-regression-'));app.setPath('userData',path.join(root,'profile'));process.env.QIJIAN_TEST_LIBRARY_ROOT=root;process.env.QIJIAN_TEST_DETACHED='1';
+fs.mkdirSync(path.join(root,'attachments','doc-a'),{recursive:true});
+const imageFile=path.join(root,'attachments','doc-a','original.png'),pixels=Buffer.alloc(120*80*4);for(let i=0;i<pixels.length;i+=4){pixels[i+2]=255;pixels[i+3]=255}fs.writeFileSync(imageFile,nativeImage.createFromBitmap(pixels,{width:120,height:80}).toPNG());
+const imageUrl=pathToFileURL(imageFile).href,stamp=new Date().toISOString();
+let mixed='<h1>混合标题</h1><p><strong>正文粗体</strong> <em>italic</em></p><ul><li><p>父条目</p><ul><li><p>子条目</p></li></ul></li></ul><table><tbody><tr><td><p>单元格</p></td></tr></tbody></table><p><span class="editor-formula formula-inline" data-latex="x^2">x^2</span></p><div class="image-row"><figure class="editor-image" data-image-id="original"><img src="'+imageUrl+'"></figure></div>';
+const imageStart=mixed.indexOf('<div class="image-row">'),imageMarkup=mixed.slice(imageStart);mixed=mixed.slice(0,imageStart).replace("</h1>","</h1>"+imageMarkup);
+const docs=Array.from({length:21},(_,i)=>({id:i?'doc-'+i:'a',type:'document',title:'Doc '+i,order:i,content:i?'<h1>文稿 '+i+'</h1><p>'+('长正文 '.repeat(400))+'TAIL-SEARCH-'+i+'</p>':mixed,versions:i?[]:[{id:'old',sessionId:'old',at:stamp,content:mixed}],createdAt:stamp,updatedAt:stamp}));
+fs.writeFileSync(path.join(root,'library.json'),JSON.stringify({nodes:docs,activeId:'a',settings:{},historyResetVersion:1,historyPolicyVersion:1,documentNormalizationVersion:8,writeRevision:0}));
+const calls=[];let saveGate=null,saveEntered=false,previewGate=null,failSave=false;
+const handle=ipcMain.handle.bind(ipcMain);ipcMain.handle=(channel,listener)=>handle(channel,async(event,...args)=>{
+ if(channel==='library:save'){calls.push({revision:args[0].writeRevision,html:args[0].nodes[0].content,cleanup:args[1]?.cleanupDocumentIds});if(saveGate){saveEntered=true;await saveGate}if(failSave){failSave=false;throw Error('simulated save failure')}}
+ if(channel==='document:image-preview'&&previewGate)await previewGate;
+ return listener(event,...args);
+});
+dialog.showSaveDialog=async(_parent,opts)=>({canceled:false,filePath:path.join(root,'export.'+opts.filters[0].extensions[0])});
+app.on('web-contents-created',(_event,contents)=>contents.on('console-message',event=>console.log('CONSOLE',event.message)));
+require(process.env.QIJIAN_TEST_APP || '../src/main.js');const wait=ms=>new Promise(r=>setTimeout(r,ms));
+async function until(fn,label){for(let i=0;i<150;i++){const x=await fn();if(x)return x;await wait(60)}throw Error('Timeout: '+label)}
+app.whenReady().then(async()=>{try{
+ const win=await until(()=>BrowserWindow.getAllWindows().find(w=>w.webContents.getURL().includes('index.html')),'window');const run=async code=>{try{return await win.webContents.executeJavaScript(code,true)}catch(error){throw new Error(code.slice(0,250)+"\n"+error.stack)}};
+ await until(()=>run('typeof activeDoc!=="undefined"&&!!activeDoc&&!!qijianEditor.enabled').catch(()=>false),'editor');await wait(800);const checks={wordExporterLoadedOnDemand:!Object.keys(require.cache).some(file=>/[\\/]node_modules[\\/]docx[\\/]/.test(file))};
+ checks.hiddenHistoryNotBuilt=await run('document.querySelector("#versionPreviewContent").childNodes.length===0');
+ await run('window.__cards=[...document.querySelectorAll(".doc-card")];window.__before=qijianEditor.getHTML();openTool("versions");true');await wait(150);
+ checks.visibleMixedHistory=await run('!!document.querySelector("#versionPreviewContent h1")&&!!document.querySelector("#versionPreviewContent table")&&!!document.querySelector("#versionPreviewContent img")');
+ await run('closeTools();true');checks.closedHistoryReleased=await run('document.querySelector("#versionPreviewContent").childNodes.length===0&&__before===qijianEditor.getHTML()');
+ checks.cardBodiesBounded=await run('[...document.querySelectorAll(".doc-card>p")].every(p=>p.textContent.length<=600)');
+ const beforeCalls=calls.length;let release;saveGate=new Promise(r=>release=r);saveEntered=false;
+ await run('qijianEditor.setTextSelection(2);qijianEditor.view.dispatch(qijianEditor.view.state.tr.insertText("0"));persist(true);window.__saves=[flushSave({throwOnError:true})];true');await until(()=>saveEntered,'blocked save');
+ await run('for(let i=1;i<=20;i++){qijianEditor.view.dispatch(qijianEditor.view.state.tr.insertText(String(i)));persist(true);__saves.push(flushSave({throwOnError:true}))}true');
+ assert.equal(calls.length-beforeCalls,1);saveGate=null;release();await run('Promise.all(__saves).then(()=>true)');
+ checks.pendingSavesCoalesced=calls.length-beforeCalls===2;checks.latestEditPersisted=await run('activeDoc.content===qijianEditor.getHTML()')&&JSON.parse(fs.readFileSync(path.join(root,'library.json'))).nodes[0].content===calls.at(-1).html;
+ checks.cardsReused=await run('__cards.every((c,i)=>c===document.querySelectorAll(".doc-card")[i])');
+ checks.undoRedoStillExact=await run('(()=>{const before=qijianEditor.getHTML();qijianEditor.undo();const changed=qijianEditor.getHTML()!==before;qijianEditor.redo();return changed&&before===qijianEditor.getHTML()})()');
+ failSave=true;await run('pendingImageCleanup.add("a");window.__failure=flushSave({throwOnError:true}).then(()=>false,()=>true);true');checks.saveFailureReported=await run('__failure');checks.cleanupSurvivesFailure=await run('pendingImageCleanup.has("a")');await run('flushSave({throwOnError:true}).then(()=>true)');checks.cleanupRetried=calls.at(-1).cleanup.includes('a');
+ await run('query="tail-search-20";renderDocs();true');checks.fullTextSearchPreserved=await run('document.querySelectorAll(".doc-card").length===1&&document.querySelector(".doc-card").dataset.nodeId==="doc-20"');await run('query="";renderDocs();true');
+ await run('openImageExport();true');await until(()=>run('document.querySelector("#imageExportFrame").srcdoc.includes("qijian-image:")'),'preview');await wait(350);
+ const popup=await until(()=>BrowserWindow.getAllWindows().find(w=>w!==win&&w.getTitle()==='导出图片'),'popup');
+ popup.webContents.setBackgroundThrottling(false);popup.showInactive();await wait(900);const previewShot=await popup.webContents.capturePage();fs.writeFileSync(path.join(__dirname,"../dist/memory-preview.png"),previewShot.toPNG());const previewBitmap=previewShot.toBitmap();let previewRed=0;for(let i=0;i<previewBitmap.length;i+=4)if(previewBitmap[i+2]>210&&previewBitmap[i]<60&&previewBitmap[i+1]<60)previewRed++;checks.previewImageLoaded=previewRed>100;
+ const html=await run('document.querySelector("#imageExportFrame").srcdoc');fs.writeFileSync(path.join(__dirname,"../dist/memory-preview.html"),html);const url=html.match(/qijian-image:\/\/asset\/[a-f0-9-]+/)[0];checks.previewHasNoBase64Copy=!html.includes('data:image/png;base64');
+ await run('window.__previewElement=detachedDialogs.get("imageExportDialog").document.querySelector("#imageExportFrame");document.querySelector("#saveImageExport").disabled=true;true');await wait(180);checks.popupKeepsIframe=await run('__previewElement===detachedDialogs.get("imageExportDialog").document.querySelector("#imageExportFrame")');await run('document.querySelector("#saveImageExport").disabled=false;closeImageExport();true');await wait(100);
+ checks.previewReleased=await run('!document.querySelector("#imageExportFrame").srcdoc');checks.previewTokenRevoked=(await net.fetch(url,{cache:'no-store'})).status===404;
+ const moduleRoot=process.env.QIJIAN_TEST_APP?path.dirname(process.env.QIJIAN_TEST_APP):path.join(__dirname,'../src');
+ const {createImageScope}=require(path.join(moduleRoot,'export-images.js'));const scopeA=createImageScope(),scopeB=createImageScope();const sharedA=scopeA.urlFor(imageFile),sharedB=scopeB.urlFor(imageFile);scopeA.dispose();const stillAvailable=(await net.fetch(sharedB,{cache:'no-store'})).status===200;scopeB.dispose();checks.previewScopesIndependent=sharedA===sharedB&&stillAvailable&&(await net.fetch(sharedB,{cache:'no-store'})).status===404;
+ const probeFile=path.join(root,'cache-probe.png');fs.copyFileSync(imageFile,probeFile);const oldScope=createImageScope(),newScope=createImageScope(),oldUrl=oldScope.urlFor(probeFile);fs.appendFileSync(probeFile,Buffer.from([0]));checks.modifiedImageGetsNewCacheKey=oldUrl!==newScope.urlFor(probeFile);oldScope.dispose();newScope.dispose();
+ checks.unknownImageTokenDenied=(await net.fetch('qijian-image://asset/unknown',{cache:'no-store'})).status===404;
+ let releasePreview;previewGate=new Promise(r=>releasePreview=r);await run('openImageExport();closeImageExport();true');previewGate=null;releasePreview();await wait(250);checks.latePreviewCannotReappear=await run('!document.querySelector("#imageExportFrame").srcdoc&&document.querySelector("#imageExportDialog").classList.contains("hidden")');
+ await run('window.qijian.exportDocx({title:fileName(),blocks:docxBlocksRich()})');const word=fs.readFileSync(path.join(root,'export.docx'));checks.wordExportKeepsImages=word.subarray(0,2).toString()==='PK'&&word.includes(Buffer.from('word/media/'));
+ await run('window.qijian.exportPdf(imageExportPayload())');const pdf=fs.readFileSync(path.join(root,'export.pdf'));checks.pdfEmbedsImages=/\/Subtype\s*\/Image/.test(pdf.toString('latin1'));
+ await run('window.qijian.exportPng(imageExportPayload())');const png=nativeImage.createFromPath(path.join(root,'export.png')),bitmap=png.toBitmap();let red=0;for(let i=0;i<bitmap.length;i+=4)if(bitmap[i+2]>210&&bitmap[i]<60&&bitmap[i+1]<60)red++;checks.pngContainsOriginalImage=red>100;
+ checks.originalImageAndReferenceUnchanged=fs.existsSync(imageFile)&&await run('qijianEditor.getHTML().includes('+JSON.stringify(imageUrl)+')&&!qijianEditor.getHTML().includes("qijian-image:")');
+ console.log(JSON.stringify({checks,failed:Object.keys(checks).filter(k=>!checks[k])},null,2));assert(Object.values(checks).every(Boolean));app.exit(0);
+}catch(error){console.error(error);app.exit(1)}});

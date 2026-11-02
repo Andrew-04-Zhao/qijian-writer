@@ -1,0 +1,94 @@
+const {app,BrowserWindow}=require('electron');
+const assert=require('assert'),fs=require('fs'),os=require('os'),path=require('path'),http=require('http');
+const {pathToFileURL,fileURLToPath}=require('url');
+const root=fs.mkdtempSync(path.join(os.tmpdir(),'qijian-ingestion-'));
+const png=Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=','base64');
+const external=path.join(root,'outside.png');fs.writeFileSync(external,png);
+const src=pathToFileURL(external).href,stamp=new Date().toISOString();
+const initial={nodes:['a','b'].map(id=>({id,type:'document',title:id,content:'<p>开始</p><img src="'+src+'">',contentJson:null,versions:[],createdAt:stamp,updatedAt:stamp,deletedAt:null})),activeId:'a',settings:{},documentNormalizationVersion:8,historyResetVersion:1,historyPolicyVersion:1,writeRevision:0};
+fs.writeFileSync(path.join(root,'library.json'),JSON.stringify(initial));
+process.env.QIJIAN_TEST_LIBRARY_ROOT=root;
+const server=http.createServer((req,res)=>{if(req.url==='/missing.png'){res.writeHead(404);res.end();return}res.writeHead(200,{'content-type':'image/png'});res.end(png)});
+require('../src/main.js');
+const wait=ms=>new Promise(r=>setTimeout(r,ms));
+const fileExists=url=>fs.existsSync(fileURLToPath(url));
+app.whenReady().then(async()=>{
+ try{
+  await new Promise(resolve=>server.listen(0,'127.0.0.1',resolve));await wait(1400);
+  const win=BrowserWindow.getAllWindows().find(w=>w.webContents.getURL().includes('index.html'));
+  const run=code=>win.webContents.executeJavaScript(code);
+  const sources=()=>run('[...imageSourcesInDocument({contentJson:window.qijianEditor.getJSON()})]');
+  const paste=async html=>{
+   await run('(()=>{const data=new DataTransfer();data.setData("text/html",'+JSON.stringify(html)+');data.setData("text/plain","图片");document.querySelector("#editor").dispatchEvent(new ClipboardEvent("paste",{clipboardData:data,bubbles:true,cancelable:true}))})()');
+   await wait(450);
+  };
+  const checks={};
+  await run('flushSave()');
+  const initialSources=await run('library.nodes.map(d=>[...imageSourcesInDocument({content:d.content})][0])');
+  assert(initialSources[0]!==initialSources[1]&&initialSources.every(fileExists));
+  checks.startupCopiesPerDocument=true;
+  await run('window.qijianEditor.setContent("<p>起点</p>",null);window.qijianEditor.setTextSelection(1)');
+  const network='http://127.0.0.1:'+server.address().port+'/image.png';
+  const mixed='<h2>组合标题</h2><p>正文 <strong>粗体</strong></p><ul><li><p>大纲</p><img src="'+src+'"><ul><li>子项</li></ul></li></ul><p>\\(x_i\\)</p><table><tr><td>甲</td><td>乙</td></tr></table><img src="'+network+'">';
+  await paste(mixed);
+  const inserted=await sources();
+  assert(inserted.length===2&&inserted.every(s=>s.includes('/doc-a/')&&fileExists(s)));
+  const types=await run('(()=>{const types=[];window.qijianEditor.view.state.doc.descendants(n=>types.push(n.type.name));return types})()');
+  assert(['heading','bullet_list','formula_inline','table_block','image_item'].every(t=>types.includes(t)));
+  checks.localAndRemoteMixedPasteOwned=true;
+  await run('window.qijianEditor.undo()');assert.equal((await sources()).length,0);await run('window.qijianEditor.redo()');assert.deepEqual(await sources(),inserted);
+  checks.mixedPasteSingleUndoRedo=true;
+  fs.unlinkSync(external);await wait(150);
+  assert(await run('Promise.all([...document.querySelectorAll("#editor img")].filter(image=>image.getAttribute("src")).map(image=>new Promise(resolve=>{if(image.complete)return resolve(image.naturalWidth>0);image.onload=()=>resolve(image.naturalWidth>0);image.onerror=()=>resolve(false)}))).then(results=>results.every(Boolean))'));
+  checks.originalRemovedOwnedImagesStillDisplay=true;
+  await run('(()=>{window.qijianEditor.selectAll();const data=new DataTransfer();document.querySelector("#editor").dispatchEvent(new ClipboardEvent("copy",{clipboardData:data,bubbles:true,cancelable:true}));window.clipboardTest=Object.fromEntries([...data.types].map(type=>[type,data.getData(type)]))})()');
+  await run('select("b");window.qijianEditor.setContent("<p></p>",null);window.qijianEditor.setTextSelection(1);(()=>{const data=new DataTransfer();for(const [type,text] of Object.entries(window.clipboardTest))data.setData(type,text);document.querySelector("#editor").dispatchEvent(new ClipboardEvent("paste",{clipboardData:data,bubbles:true,cancelable:true}))})()');
+  await wait(450);const copied=await sources();
+  assert.equal(copied.length,2);assert(copied.every(s=>s.includes('/doc-b/')&&!inserted.includes(s)&&fileExists(s)));
+  checks.crossDocumentClipboardIndependent=true;
+  await run('flushSave()');
+  await run('duplicateDoc(activeDoc)');
+  const duplicate=await sources();const duplicateId=await run('activeDoc.id');
+  assert(duplicate.every(s=>s.includes('/doc-'+duplicateId+'/')&&!copied.includes(s)&&fileExists(s)));
+  checks.duplicateDocumentIndependent=true;
+  await run('select("b");window.qijianEditor.setTextSelection(1)');
+  const beforeFailure=await run('JSON.stringify(window.qijianEditor.getJSON())');
+  await paste('<p>失败内容</p><img src="'+network.replace('/image.png','/missing.png')+'">');
+  assert.equal(await run('JSON.stringify(window.qijianEditor.getJSON())'),beforeFailure);
+  checks.downloadFailureLeavesDocumentIntact=true;
+
+  // Exercise the same import step used for relative Markdown images.
+  const rel=path.join(root,'relative.png');fs.writeFileSync(rel,png);
+  const adopted=await run('(async()=>{const holder=document.createElement("div");holder.innerHTML=\'<img src="relative.png">\';await window.adoptImageElements(holder,'+JSON.stringify(root)+',"b");return holder.querySelector("img").src})()');
+  assert(adopted.includes('/doc-b/')&&fileExists(adopted));checks.relativeImportOwned=true;
+
+  const bdir=path.join(root,'attachments','doc-b'),adir=path.join(root,'attachments','doc-a');
+  const orphan=path.join(bdir,'orphan.png'),other=path.join(adir,'other-orphan.png');
+  fs.writeFileSync(orphan,png);fs.writeFileSync(other,png);
+  await run('(()=>{const view=window.qijianEditor.view;view.dispatch(view.state.tr.delete(0,view.state.doc.content.size));persist(true)})()');
+  await run('flushSave()');
+  assert(copied.every(fileExists)&&fs.existsSync(orphan));checks.ordinarySaveNeverCleansImages=true;
+  // History pruning is an allowed cleanup event; undo still owns the deleted images.
+  await run('activeDoc.versions.push({id:"expired",at:"2000-01-01T00:00:00Z",content:"<p>旧</p>"});pruneHistoryVersions(activeDoc);persist();flushSave()');
+  assert(copied.every(fileExists)&&!fs.existsSync(orphan)&&fs.existsSync(other));
+  await run('window.qijianEditor.undo()');assert.deepEqual(await sources(),copied);
+  checks.historyCleanupProtectsUndoAndOtherDocuments=true;
+  await run('flushSave();select("a")');await run('flushSave()');
+  await run('window.confirm=()=>true;const d=node("b");d.deletedAt=new Date().toISOString();permanent(d);flushSave()');
+  assert(!copied.some(fileExists)&&inserted.every(fileExists)&&duplicate.every(fileExists));
+  checks.permanentDeleteOnlyOwnUnreferencedImages=true;
+  assert(fs.existsSync(other));checks.unrelatedOrphanNotScanned=true;
+  await run('createDoc();window.qijianEditor.setContent("<p>拖入图片</p>",null);window.qijianEditor.setTextSelection(1)');
+  await run('(()=>{const bytes=Uint8Array.from(atob('+JSON.stringify(png.toString('base64'))+'),c=>c.charCodeAt(0));const data=new DataTransfer();data.items.add(new File([bytes],"dragged.png"));const editor=document.querySelector("#editor"),rect=editor.querySelector("p").getBoundingClientRect();editor.dispatchEvent(new DragEvent("drop",{dataTransfer:data,bubbles:true,cancelable:true,clientX:rect.left+5,clientY:rect.top+5}))})()');
+  await wait(400);assert.equal((await sources()).length,1);assert((await sources()).every(fileExists));checks.externalFileDropOwned=true;
+  await run('window.qijianEditor.setContent("<p></p>",null);window.qijianEditor.setTextSelection(1)');
+  await run('(()=>{const bytes=Uint8Array.from(atob('+JSON.stringify(png.toString('base64'))+'),c=>c.charCodeAt(0));const data=new DataTransfer();data.items.add(new File([bytes],"clipboard.png",{type:"image/png"}));data.setData("text/html",'+JSON.stringify('<img src="'+src+'">')+');document.querySelector("#editor").dispatchEvent(new ClipboardEvent("paste",{clipboardData:data,bubbles:true,cancelable:true}))})()');
+  await wait(400);assert.equal((await sources()).length,1);assert((await sources()).every(fileExists));checks.clipboardBitmapRecoversUnavailableSingleHtmlImage=true;
+  await run('window.qijianEditor.setContent("<p></p>",null);window.qijianEditor.setTextSelection(1)');
+  const blobUrl=await run('(()=>{const bytes=Uint8Array.from(atob('+JSON.stringify(png.toString('base64'))+'),c=>c.charCodeAt(0));return URL.createObjectURL(new Blob([bytes],{type:"image/png"}))})()');
+  await paste('<img src="'+blobUrl+'">');await run('URL.revokeObjectURL('+JSON.stringify(blobUrl)+')');
+  assert.equal((await sources()).length,1);assert((await sources()).every(fileExists));checks.blobImageSurvivesRevocation=true;
+  console.log(JSON.stringify(checks,null,2));
+  server.close();app.exit(0);
+ }catch(error){console.error(error);server.close();app.exit(1)}
+});

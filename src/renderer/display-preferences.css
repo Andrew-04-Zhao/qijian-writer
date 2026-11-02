@@ -1,0 +1,9 @@
+/* Reading zoom is presentation-only; never stored in document markup. */
+#editorWrap { zoom: var(--reading-local-scale, 1); }
+#settingsGeneral .display-preferences { margin: 24px 0 0; padding-top: 18px; border-top: 1px solid var(--line, #ddd); }
+#settingsGeneral .display-preferences h2 { font-size: 15px; font-weight: 500; margin: 0 0 12px; }
+#settingsGeneral .display-preferences .settings-fields { margin-top: 0; }
+#settingsGeneral .display-note { color: var(--muted, #777); font-size: 11px; line-height: 1.6; margin: 10px 0; }
+#settingsGeneral .display-actions { display: flex; justify-content: flex-end; margin-top: 12px; }
+#settingsGeneral .display-actions button { font-size: 12px; height: 28px; padding: 0 10px; border-radius: 5px; background: var(--hover, #eee); }
+#settingsDialog #resetSettings { position: static; display: block; margin: 16px 0 0 auto; }

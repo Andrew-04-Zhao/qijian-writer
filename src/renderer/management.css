@@ -1,0 +1,14 @@
+.brand #collapseFolders{margin-left:auto;color:var(--muted);font-size:21px;width:26px;height:30px;border-radius:5px}
+.brand #collapseFolders:hover{background:rgba(255,255,255,.6);color:var(--text)}
+.nav-label{display:flex;align-items:center;gap:9px}
+.nav-icon{width:17px;text-align:center;color:#6d7478;font-size:17px;line-height:1}
+.folder-row{width:100%;display:flex;align-items:center;gap:7px;text-align:left}
+.folder-row>span:last-child{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.folder-icon{display:inline-flex;align-items:center;justify-content:center;color:#76828a;flex:none;vertical-align:middle;margin-right:5px}
+.doc-card .folder-icon{margin-right:9px}
+.doc-card[draggable=true],.doc-card.pointer-draggable,.folder-row[draggable=true]{cursor:grab}
+.doc-card.dragging,.folder-row.dragging{opacity:.45}
+.drop-target{outline:2px solid var(--accent);outline-offset:-2px;background:rgba(21,148,199,.12)!important}
+.item-context{position:fixed;z-index:180;min-width:172px;background:#fcfcfc;border:1px solid #d9dbde;border-radius:7px;box-shadow:0 12px 32px #0002;padding:5px}
+.item-context button{display:block;width:100%;padding:8px 12px;text-align:left;border-radius:4px}
+.item-context button:hover{background:#eceef0}

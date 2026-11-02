@@ -1,0 +1,58 @@
+栖简开发归档（2026-10-28）
+
+安装软件（2026-10-29 补充）
+直接运行 installers/栖简-0.1.0-安装版.exe；安装软件不需要 Node.js 或恢复开发依赖。
+安装包使用本归档的源码与锁定依赖重新构建，已核对打包源码一致且压缩数据完整。
+
+归档内容
+完整源码和安装包：installers、src、build、tests、package.json、package-lock.json、.gitignore、README.md 和启动脚本。
+保留实际使用的安装图片、KaTeX 字体/样式、离线拼写词典及测试素材。
+不包含 node_modules、dist、dist-refresh、临时 .debug-smoke.cjs；它们是可重新生成的依赖和开发产物。
+ARCHIVE-MANIFEST.json 记录归档文件的大小与 SHA-256 校验值。
+
+恢复开发
+1. 解压到 E:\ai\_lesson，得到 qijian-writer 文件夹，也可以解压到其它目录。
+2. 使用 Node.js 22（归档时为 v22.22.0）和 npm，在项目目录执行：
+   npm ci
+   npm run check
+   npm start
+   npm ci 需要联网下载 package-lock.json 锁定的依赖和 Electron。
+3. 依赖安装完成后，也可以双击“启动栖简.cmd”。
+4. 构建免安装版：
+   npm run build:windows -- --config.electronDist=node_modules/electron/dist
+5. 构建安装版（先完成上一步）：
+   npm run build:installer -- --prepackaged dist/win-unpacked
+
+验证
+先创建输出目录：New-Item -ItemType Directory -Force dist/diagnostics
+运行 npm run test:smoke；这些脚本使用临时文稿库。
+部分视觉测试会生成 dist 截图。installer-e2e-smoke.cjs 需另建隔离的安装测试配置和上下文，旧 dist 中的机器专用配置未保留。
+tests 中的 clear-history-and-cleanup.cjs 等维护脚本会改动传入的文稿库，不能对真实文稿库随意运行。
+
+继续开发时需保留的行为
+文稿与其历史版本共用本篇文稿的图片目录；不同文稿各自保存图片。
+历史版本保留 15 天，同一启动会话记录最新状态。图片清理须遵守引用检查与既有触发时机。
+手动备份只含当前文稿和对应图片，不含历史版本，采用压缩备份覆盖旧备份；恢复时互换当前状态和备份。
+此次归档只清理开发目录，未改动 E:\ai\_lesson\栖简文稿库 或已安装应用。
+README.md 中关于每日自动备份、早期历史逻辑的描述属于旧版，请以当前代码和测试为准。
+
+最后代码改动
+设置窗口关闭图标及恢复默认按钮缩小；已验证明暗主题、关闭、主题滚动和历史版本相关功能。
+此前内存优化已完成回归验证。编辑、图片、公式、大纲、撤销、历史版本、备份的回归脚本均保留。
+
+2026-11-02 更新
+PDF 导出新增实时预览、10/12/14pt 字号、A4/720/1080/1440px 页面宽度；沿用文稿字体，图片导出设置独立。
+屏幕页面按约 1:√2 的宽高比自动分页；预览展示连续内容。
+验证：新增 tests/pdf-export-smoke.cjs，覆盖 12 个组合、PDF 页面尺寸和图片、取消与失败重试、文稿不变；实际 PDF 还验证了字体/字号/全文并做页面渲染检查。
+原有导出图片及内存生命周期回归通过；归档安装包为本次更新后的版本。
+
+2026-11-02 显示缩放更新
+设置→常规新增“显示”：界面缩放 100/110/125/150%，阅读缩放 75/90/100/110/125/150/175/200%，可单独重置缩放。
+查看菜单新增放大阅读、缩小阅读、恢复阅读 100%。100% 基于 Windows 系统显示比例。
+缩放选择保存在本机 userData/display-preferences.json，不进入文稿库和备份；不改文稿字体、字号或导出设置。
+界面缩放作用于主窗口与独立弹窗；阅读缩放作用于正文、图片、表格、公式，补偿界面缩放以保持独立。
+修正缩放后的图片缩放、大纲圆点点击与动画、行号坐标，缩放时保持当前阅读段落。
+修正隐藏 PNG/PDF 导出窗口边框和菜单造成的 viewport 高度变化；PNG 导出等待字体和布局稳定。
+验证：tests/display-preferences-smoke.cjs 覆盖 32 种比例组合、冷启动恢复、独立弹窗、光标、图片拖动与缩放、撤销重做、大纲、阅读定位、缩放前后 PNG 像素一致和 PDF 页面尺寸一致。
+原有 editor-focus、outline-interaction、structured-image-drag、settings-history、memory-lifecycle、pdf-export 六组回归全部通过。
+开发归档中的 installers/栖简-0.1.0-安装版.exe 已更新；此功能验证全部使用独立测试文稿库，未修改个人文稿库。

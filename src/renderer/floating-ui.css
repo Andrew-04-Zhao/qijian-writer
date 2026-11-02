@@ -1,0 +1,52 @@
+/* UI typography follows the 12px library rail; document typography stays independent. */
+body{font-size:12px;line-height:1.3}
+#app :where(button,input,select,label,span,p,h1,h2,h3,strong,b,i,time,output,textarea):not(.editor):not(.editor *){font-size:12px;line-height:1.3}
+.menu-popup button{min-height:29px;padding:3px 8px;line-height:1.3}
+.menu-popup hr{margin:3px 4px}
+.tool-tabs button{min-height:29px;padding:3px 8px}
+#outlineView button{padding:5px 7px}
+.settings-dialog{inset:auto;top:50%;left:50%;right:auto;bottom:auto;transform:translate(-50%,-50%);width:min(680px,calc(100vw - 32px));height:min(500px,calc(100vh - 70px));grid-template-columns:138px minmax(0,1fr);border:1px solid var(--line);border-radius:9px;box-shadow:0 18px 50px #0004;overflow:hidden;background:var(--paper);z-index:160}
+.settings-drag-handle{position:absolute;z-index:2;top:0;left:0;right:0;height:32px;display:flex;align-items:center;padding-left:11px;background:#f2f2f0;border-bottom:1px solid var(--line);color:#656b6d;cursor:move;touch-action:none;user-select:none}
+.settings-nav{padding-top:33px}
+.settings-label{display:none}
+.settings-nav button{min-height:32px;padding:5px 11px;border-left-width:2px;text-align:left}
+.settings-main{padding:44px 19px 43px;overflow:auto}
+.settings-close{position:absolute;z-index:3;top:1px;right:5px;width:28px;height:28px;padding:0;color:#777}
+.settings-page h1{margin:0 0 12px;font-weight:500}
+.settings-fields{width:min(420px,100%);margin:8px auto 0}
+.settings-fields label{grid-template-columns:93px minmax(0,1fr) 31px;gap:7px;min-height:34px;text-align:right}
+.settings-fields input,.settings-fields select{height:27px;padding:2px 6px}
+.settings-reset{right:18px;bottom:8px;padding:5px 9px}
+.advanced-fields{margin:18px auto 0;gap:8px}
+.advanced-fields input{height:27px;width:82px;padding:3px 6px}
+.theme-choices{grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin:12px auto 0}
+.theme-choices button{gap:5px;padding:3px}
+.theme-preview{height:105px;padding:10px}
+#settingsStorage button{padding:6px 9px}
+.mindmap-window{position:fixed;z-index:140;width:min(720px,calc(100vw - 30px));height:min(520px,calc(100vh - 70px));min-width:390px;min-height:280px;resize:both;background:var(--paper);border:1px solid var(--line);border-radius:10px;box-shadow:0 18px 52px #0003;display:flex;flex-direction:column;overflow:hidden}
+.mindmap-window.mindmap-fullscreen{left:8px!important;right:auto!important;top:36px!important;bottom:auto!important;width:calc(100vw - 16px)!important;height:calc(100vh - 44px)!important;min-width:0;min-height:0;resize:none;transform:none!important;border-radius:8px}
+.mindmap-window-head{height:32px;min-height:32px;display:flex;align-items:center;justify-content:space-between;padding:0 7px 0 11px;background:#f2f2f0;border-bottom:1px solid var(--line);cursor:move;touch-action:none;user-select:none}
+.mindmap-window-head button{min-width:25px;height:25px;padding:0 6px;border-radius:4px;cursor:pointer}
+.mindmap-window-head button:hover{background:#e4e4e4}
+.mindmap-window-tools{display:flex;align-items:center;gap:2px}.mindmap-window-tools>[data-map-zoom]{width:38px;text-align:center;font-size:11px;color:var(--muted)}
+.mindmap-window-body{flex:1;min-height:0;overflow:auto;padding:10px;background:color-mix(in srgb,var(--paper) 97%,var(--list))}
+.mindmap-window svg{display:block;max-width:none}
+.mindmap-window .map-link{fill:none;stroke:color-mix(in srgb,var(--accent) 48%,var(--line));stroke-width:2}.mindmap-window .map-link.level-1{stroke-width:3}
+.mindmap-window .map-node{cursor:pointer;outline:none}.mindmap-window .map-node>rect{fill:var(--paper);stroke:color-mix(in srgb,var(--line) 72%,var(--accent));stroke-width:1.2;filter:drop-shadow(0 2px 3px #00000012)}.mindmap-window .map-node:hover>rect,.mindmap-window .map-node:focus>rect{stroke:var(--accent);stroke-width:2}.mindmap-window .map-node text{font-family:var(--font-en),var(--font-zh),serif;font-size:12px;fill:var(--text);pointer-events:none}.mindmap-window .map-root>rect{fill:var(--accent);stroke:var(--accent)}.mindmap-window .map-root>text{fill:white;font-weight:700}.mindmap-window .map-node.level-1>rect{fill:color-mix(in srgb,var(--accent) 10%,var(--paper))}.mindmap-window .map-collapse{cursor:pointer}.mindmap-window .map-collapse circle{fill:var(--paper);stroke:var(--accent);stroke-width:1.3}.mindmap-window .map-collapse text{fill:var(--accent);font-size:13px;font-weight:700}.mindmap-window .map-image{clip-path:inset(0 round 4px)}
+.editor .mindmap-source-flash{animation:mindmap-source-flash .9s ease}@keyframes mindmap-source-flash{0%,100%{background:transparent}35%{background:color-mix(in srgb,var(--accent) 18%,transparent)}}
+.mindmap-toggle{right:29px}
+@media(max-width:720px){.settings-dialog{grid-template-columns:115px minmax(0,1fr)}.settings-main{padding:43px 10px 39px}.settings-fields label{grid-template-columns:75px minmax(0,1fr) 25px}.theme-choices{grid-template-columns:repeat(2,minmax(0,1fr))}}
+
+#outlineView button{font-family:var(--font-en),var(--font-zh),serif}
+
+
+/* Keep window controls outside the scrolling settings page. */
+.settings-main{position:relative;overflow:hidden;padding:0}
+.settings-main>.settings-page{position:absolute;inset:32px 0 0;overflow:auto;padding:12px 19px 43px}
+.settings-main>.settings-close{position:absolute;z-index:5;top:1px;right:5px}
+
+.settings-dialog,.settings-dialog :where(button,input,select,label,p,span,h1){font-family:"Microsoft YaHei","Segoe UI",sans-serif}
+.settings-page h1{font-size:17px}
+.theme-choices button{font-size:10px}
+.theme-preview{height:78px;padding:7px;font-size:13px;line-height:1.45}
+.theme-preview *{font-size:inherit}

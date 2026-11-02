@@ -1,0 +1,66 @@
+.menu-popup[data-menu="mark"]{width:315px;max-height:min(730px,calc(100vh - 36px));overflow:auto}
+.menu-popup[data-menu="mark"] button{gap:14px}
+.menu-popup .menu-shortcut{margin-left:auto;color:#8a8a8a;font-size:11px;white-space:nowrap}
+.editor h1,.editor h2,.editor h3,.editor h4,.editor h5,.editor h6{position:relative}
+.editor h1::before,.editor h2::before,.editor h3::before,.editor h4::before,.editor h5::before,.editor h6::before{position:absolute;left:-34px;top:0;width:26px;height:calc(var(--heading-size) * var(--leading));display:flex;align-items:center;justify-content:flex-end;font:11px/1 "Times New Roman",Times,serif;color:#abb2be;pointer-events:none}
+.editor h1{--heading-size:var(--h1-size,31px)}
+.editor h2{--heading-size:var(--h2-size,26px)}
+.editor h3{--heading-size:var(--h3-size,22px)}
+.editor h4{--heading-size:var(--size)}
+.editor h5{--heading-size:calc(var(--size) * .83)}
+.editor h6{--heading-size:calc(var(--size) * .67)}
+.editor h1::before{content:"H1"}.editor h2::before{content:"H2"}.editor h3::before{content:"H3"}.editor h4::before{content:"H4"}.editor h5::before{content:"H5"}.editor h6::before{content:"H6"}
+.editor ul,.editor ol,.editor li{font-family:var(--font-en),var(--font-zh),serif;font-size:var(--size);font-weight:400;line-height:var(--leading);color:var(--text)}
+.editor li::marker{color:#747474}
+
+.editor > :is(p,h1,h2,h3,h4,h5,h6,ul,ol,blockquote,pre,aside,hr,div){margin-block:0 var(--para)}
+.editor ul,.editor ol{padding-inline-start:1em}
+.editor li > ul,.editor li > ol{padding-inline-start:1em;margin:0}
+.editor li{margin:0}
+.mindmap-toggle{position:absolute;right:29px;z-index:3;width:21px;height:21px;padding:2px;border-radius:4px;color:#89929b}
+.mindmap-toggle:hover{background:#e4edf0;color:var(--accent)}
+.mindmap-toggle svg{display:block;width:17px;height:17px;fill:none;stroke:currentColor;stroke-width:1.35;stroke-linecap:round;stroke-linejoin:round}
+
+/* Fully custom outline tree. Native markers, margins, and indentation are reset. */
+.editor :where(ul.outline-list,ol.outline-list){display:block;position:relative;list-style:none!important;margin:0!important;padding:0!important;counter-reset:outline-item}
+.editor :where(ul.outline-list,ol.outline-list) :where(ul.outline-list,ol.outline-list){position:relative;margin:0 0 0 1em!important;padding:0!important}
+.editor :where(ul.outline-list,ol.outline-list)>li{display:block;position:relative;list-style:none!important;margin:0!important;padding:0 0 0 1em!important;font:inherit;color:inherit;transition:background-color .12s ease,border-radius .12s ease,box-shadow .12s ease}
+.editor :where(ul.outline-list,ol.outline-list)>li::marker{content:"";font-size:0}
+.editor ul.outline-list>li::before{content:"";position:absolute;z-index:1;left:.12em;top:calc(.5em * var(--leading));width:.4em;height:.4em;border:0;border-radius:50%;background:var(--outline-node,var(--muted));transform:translateY(-50%);transform-origin:center;cursor:default;pointer-events:none;transition:left .14s ease,width .14s ease,height .14s ease,background-color .14s ease,color .14s ease,box-shadow .2s ease,transform .16s ease}
+.editor ol.outline-list>li{counter-increment:outline-item;padding-left:1.5em!important}
+.editor ol.outline-list>li::before{content:counter(outline-item) ".";position:absolute;left:0;top:0;width:1.25em;text-align:right;color:var(--outline-node,var(--muted));font:inherit;cursor:default;pointer-events:none}
+.editor :where(ul.outline-list,ol.outline-list)>li:has(>:is(ul.outline-list,ol.outline-list))::after{content:"";position:absolute;z-index:0;left:.31em;top:calc(.5em * var(--leading) + .55em);bottom:calc(.5em * var(--leading) - .25em);width:1px;background:var(--outline-line,var(--muted));opacity:.28;transform:scaleY(1);transform-origin:top;pointer-events:none;transition:transform .2s cubic-bezier(.2,.75,.2,1),opacity .15s ease}.editor :where(ul.outline-list,ol.outline-list)>li.outline-collapsed::after{opacity:0;transform:scaleY(0)}
+/* Native hover survives editor transactions without changing document attributes. */
+.editor :where(ul.outline-list,ol.outline-list)>li:has(>:is(ul.outline-list,ol.outline-list)):hover:not(:has(li:hover)){background:color-mix(in srgb,var(--text) 7%,transparent);border-radius:3px;box-shadow:-.5em 0 0 color-mix(in srgb,var(--text) 7%,transparent)}
+/* Draw the symbols at the circle's geometric center, independent of font metrics. */
+.editor ul.outline-list>li:has(>:is(ul.outline-list,ol.outline-list)):hover:not(:has(li:hover))::before{content:"";left:-.08em;width:.8em;height:.8em;background-color:color-mix(in srgb,var(--muted) 72%,var(--paper));background-image:linear-gradient(var(--paper),var(--paper));background-position:center;background-size:.42em 1px;background-repeat:no-repeat;cursor:pointer;pointer-events:auto;box-shadow:0 1px 3px color-mix(in srgb,var(--text) 12%,transparent);transform:translateY(-50%)}
+.editor :where(ul.outline-list,ol.outline-list)>li>:is(ul.outline-list,ol.outline-list){display:block;height:auto;overflow:visible;visibility:visible;pointer-events:auto;opacity:1;transform:translateY(0);transform-origin:top}
+.editor :where(ul.outline-list,ol.outline-list)>li.outline-collapsed>:is(ul.outline-list,ol.outline-list){height:0;overflow:clip;visibility:hidden;pointer-events:none;opacity:0;transform:translateY(-.28em)}
+.editor ul.outline-list>li.outline-collapsed::before{box-shadow:0 0 0 .3em color-mix(in srgb,var(--muted) 20%,transparent);animation:outline-node-settle .22s ease-out}
+.editor ul.outline-list>li.outline-collapsed:has(>:is(ul.outline-list,ol.outline-list)):hover:not(:has(li:hover))::before{background-image:linear-gradient(var(--paper),var(--paper)),linear-gradient(var(--paper),var(--paper));background-size:.42em 1px,1px .42em}
+@keyframes outline-node-settle{0%{transform:translateY(-50%) scale(.76);box-shadow:0 0 0 0 color-mix(in srgb,var(--muted) 0%,transparent)}58%{transform:translateY(-50%) scale(1.12);box-shadow:0 0 0 .4em color-mix(in srgb,var(--muted) 18%,transparent)}100%{transform:translateY(-50%) scale(1);box-shadow:0 0 0 .3em color-mix(in srgb,var(--muted) 20%,transparent)}}
+@media(prefers-reduced-motion:reduce){.editor :where(ul.outline-list,ol.outline-list)>li,.editor ul.outline-list>li::before,.editor :where(ul.outline-list,ol.outline-list)>li::after,.editor :where(ul.outline-list,ol.outline-list)>li>:is(ul.outline-list,ol.outline-list){transition:none!important;animation:none!important}}
+.editor>hr{display:block;width:100%;height:1px;margin:calc(var(--para) + .45em) 0!important;padding:0;border:0;background:color-mix(in srgb,var(--text) 38%,transparent);line-height:0}
+.editor a{display:inline-block;max-width:100%;padding:.08em .48em;border:1px solid color-mix(in srgb,var(--accent) 48%,var(--line));border-radius:.35em;background:color-mix(in srgb,var(--accent) 7%,var(--paper));color:var(--accent);text-decoration:none;line-height:1.35;overflow-wrap:anywhere;cursor:pointer;box-shadow:0 1px 2px #0000000b}.editor a:hover{background:color-mix(in srgb,var(--accent) 13%,var(--paper));border-color:var(--accent)}
+
+/* 引用内容与正文保持同一文字起点。 */
+.editor blockquote{position:relative;margin-left:0!important;margin-right:0!important;padding-left:0!important;border-left:0!important}
+.editor blockquote::before{content:"";position:absolute;left:-10px;top:.28em;bottom:.28em;width:2px;background:var(--accent);opacity:.72}
+.editor figure.editor-image{display:block;width:100%;max-width:820px;margin:calc(var(--para) + .35em) auto!important;padding:0;text-align:center}
+.editor figure.editor-image img{display:block;width:100%;max-width:100%;height:auto;margin:0 auto;border-radius:10px;box-shadow:0 5px 20px color-mix(in srgb,var(--text) 14%,transparent);cursor:default}
+.editor figure.editor-image figcaption{margin-top:7px;color:var(--muted);font:12px/1.5 "Microsoft YaHei",sans-serif;text-align:center}
+.editor figure.editor-image figcaption:empty{display:none}
+.editor .image-row{display:flex;flex-wrap:wrap;align-items:flex-start;gap:12px;width:100%;margin:calc(var(--para) + .35em) 0!important}
+.editor .image-row>figure.editor-image{position:relative;flex:0 0 auto;width:calc(50% - 6px);max-width:100%;margin:0!important;padding:4px;border:1px solid transparent;border-radius:13px;background:transparent;cursor:default;transition:border-color .12s,background-color .12s,box-shadow .12s}
+.editor .image-row>figure.editor-image:only-child{width:100%;max-width:820px}
+.editor figure.editor-image{position:relative}
+.editor .image-resize-handle{position:absolute;z-index:3;width:13px;height:13px;border:2px solid var(--paper);border-radius:50%;background:var(--accent);box-shadow:0 1px 4px #0005;opacity:0;transition:opacity .12s}
+.editor .image-resize-handle[data-corner="nw"]{left:-6px;top:-6px;cursor:nwse-resize}.editor .image-resize-handle[data-corner="ne"]{right:-6px;top:-6px;cursor:nesw-resize}.editor .image-resize-handle[data-corner="sw"]{left:-6px;bottom:-6px;cursor:nesw-resize}.editor .image-resize-handle[data-corner="se"]{right:-6px;bottom:-6px;cursor:nwse-resize}
+.editor figure.editor-image:hover .image-resize-handle,.editor figure.editor-image.image-resizing .image-resize-handle,.editor figure.editor-image.image-selected .image-resize-handle{opacity:1}
+.editor figure.editor-image.image-selected{border-color:var(--accent);background:color-mix(in srgb,var(--accent) 5%,var(--paper));box-shadow:0 0 0 2px color-mix(in srgb,var(--accent) 16%,transparent)}
+.editor figure.editor-image.image-edge-caret{border-color:#e8a347;box-shadow:0 0 0 2px #e8a34755}
+.editor .image-drag-grip{position:absolute;z-index:4;left:50%;top:-11px;transform:translateX(-50%);display:none;align-items:center;justify-content:center;width:34px;height:15px;border:1px solid color-mix(in srgb,var(--accent) 72%,var(--paper));border-radius:8px;background:var(--paper);color:var(--accent);font:700 9px/1 Arial,sans-serif;letter-spacing:2px;cursor:grab;box-shadow:0 1px 4px #0002}.editor figure.editor-image.image-selected .image-drag-grip{display:flex}.editor figure.editor-image.image-dragging .image-drag-grip{cursor:grabbing}
+.editor figure.editor-image.image-resizing{user-select:none}
+.editor figure.editor-image.image-dragging{opacity:.72;outline:2px solid #377df4;outline-offset:2px}
+.editor figure.editor-image.image-drop-before::before,.editor figure.editor-image.image-drop-after::after{content:"";position:absolute;z-index:5;top:0;bottom:0;width:3px;border-radius:3px;background:#377df4}.editor figure.editor-image.image-drop-before::before{left:-7px}.editor figure.editor-image.image-drop-after::after{right:-7px}
+.editor .image-row.image-drop-target{outline:2px solid #377df4;outline-offset:4px;border-radius:8px}

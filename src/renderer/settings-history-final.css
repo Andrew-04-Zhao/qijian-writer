@@ -1,0 +1,123 @@
+/* Final settings layout: one compact scale, two theme cards per row. */
+.settings-dialog{
+  width:min(760px,calc(100vw - 32px));
+  height:min(560px,calc(100vh - 54px));
+  grid-template-columns:132px minmax(0,1fr);
+}
+.settings-main>.settings-page{padding:14px 20px 32px}
+.settings-page h1{font-size:16px!important;line-height:1.35!important;margin:0 0 12px!important;font-weight:500}
+.settings-nav button{font-size:12px!important;line-height:1.35!important}
+
+/* Keep settings actions at the same scale in embedded and detached windows. */
+#settingsDialog .settings-close{display:grid;place-items:center;font-size:19px;line-height:1}
+#settingsDialog .settings-reset{height:28px;padding:0 10px;font-size:12px;line-height:1.35}
+
+
+#settingsTheme .theme-choices{
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr))!important;
+  gap:10px!important;
+  width:100%;
+  max-width:none!important;
+  margin:0!important;
+}
+#settingsTheme .theme-choices>button{min-width:0;padding:3px!important;font-size:10px!important}
+#settingsTheme .theme-preview{height:116px!important;padding:10px 12px!important}
+#app .theme-preview,
+#app .theme-preview *,
+.detached-mount>.settings-dialog .theme-preview,
+.detached-mount>.settings-dialog .theme-preview *{
+  font-family:"Times New Roman",Times,serif!important;
+}
+#app .theme-preview :where(span,b,i,mark,code,small),
+.detached-mount>.settings-dialog .theme-preview :where(span,b,i,mark,code,small){
+  font-size:13px!important;
+  line-height:1.5!important;
+}
+#app .theme-preview .theme-preview-heading,
+.detached-mount>.settings-dialog .theme-preview .theme-preview-heading{font-size:17px!important}
+#app .theme-preview .theme-preview-level,
+.detached-mount>.settings-dialog .theme-preview .theme-preview-level{font-size:9px!important}
+#app .theme-preview .theme-preview-mode,
+.detached-mount>.settings-dialog .theme-preview .theme-preview-mode{font-size:13px!important}
+
+/* Advanced settings use the same 13px control scale throughout. */
+#settingsAdvanced{font-size:12px!important;line-height:1.5!important}
+#settingsAdvanced .advanced-fields{
+  display:grid!important;
+  grid-template-columns:82px 84px auto!important;
+  justify-content:start;
+  align-items:center;
+  gap:9px!important;
+  width:auto!important;
+  max-width:none!important;
+  margin:6px 0 0!important;
+  font-size:12px!important;
+}
+#settingsAdvanced .advanced-fields label,
+#settingsAdvanced .advanced-fields input,
+#settingsAdvanced .advanced-fields span,
+#settingsAdvanced .library-location-head label,
+#settingsAdvanced .library-location-row input,
+#settingsAdvanced .library-location-row button{
+  font-size:12px!important;
+  line-height:1.35!important;
+}
+#settingsAdvanced .advanced-fields label{text-align:left!important;min-width:0!important}
+#settingsAdvanced .advanced-fields input{width:84px!important;height:29px!important;padding:3px 7px!important}
+#settingsAdvanced .advanced-fields span{color:var(--muted)!important}
+#settingsAdvanced>p{margin:8px 0 0!important;font-size:11px!important;line-height:1.5!important;color:var(--muted)!important}
+#settingsAdvanced .library-location-setting{width:100%!important;margin:24px 0 0!important;font-size:12px!important}
+#settingsAdvanced .library-location-head{margin-bottom:9px!important}
+#settingsAdvanced .library-location-head label{font-weight:500}
+#settingsAdvanced #libraryLocationSize,
+#settingsAdvanced #libraryLocationNote{font-size:11px!important;line-height:1.5!important;color:var(--muted)!important}
+#settingsAdvanced .library-location-row input,
+#settingsAdvanced .library-location-row button{height:30px!important}
+
+/* History browser. */
+.tool-panel.versions-mode{padding:0;overflow:hidden;display:flex;flex-direction:column}
+.tool-panel.versions-mode>.panel-head,
+.tool-panel.versions-mode>#outlineView{display:none!important}
+.versions-view{height:100%;min-height:0;display:flex;flex-direction:column;background:var(--list)}
+.history-header{height:38px;min-height:38px;display:flex;align-items:center;justify-content:space-between;padding:0 10px 0 14px;border-bottom:1px solid var(--line);background:var(--paper);-webkit-app-region:drag}
+.history-header strong{font-size:13px;font-weight:500}
+.history-header button{width:28px;height:28px;font-size:19px;color:var(--muted);-webkit-app-region:no-drag}
+.history-layout{flex:1;min-height:0;display:grid;grid-template-columns:205px minmax(0,1fr);gap:8px;padding:8px 10px 0}
+.history-list{min-height:0;overflow:auto;padding:0 8px 12px 0;border-right:1px solid var(--line)}
+.history-version{display:block;width:100%;padding:11px 14px;margin:0 0 5px;border-radius:6px;text-align:left;color:var(--text)}
+.history-version:hover{background:color-mix(in srgb,var(--paper) 66%,var(--sel))}
+.history-version.selected{background:#377df4;color:#fff}
+.history-version strong,.history-version time,.history-version span{display:block}
+.history-version strong{font-size:14px;line-height:1.35;font-weight:500}
+.history-version time{font-size:13px;line-height:1.35;color:inherit}
+.history-version span{margin-top:4px;font-size:11px;line-height:1.35;color:var(--muted)}
+.history-version.selected span{color:#e8efff}
+.history-preview{min-width:0;min-height:0;overflow:auto;background:var(--paper);border:1px solid color-mix(in srgb,var(--line) 72%,transparent)}
+.history-preview-content{width:min(680px,calc(100% - 32px));min-height:100%;margin:0 auto;padding:28px 16px 54px;outline:0;pointer-events:none;color:var(--text);font:var(--size)/var(--leading) var(--font)}
+.history-preview-content p{margin:0 0 var(--para)}
+.history-preview-content h1{font-size:var(--h1-size,31px);color:var(--accent);margin:1.4em 0 .55em}
+.history-preview-content h2{font-size:var(--h2-size,26px);color:var(--accent);margin:1.3em 0 .5em}
+.history-preview-content h3{font-size:var(--h3-size,22px);color:var(--accent);margin:1.2em 0 .45em}
+.history-preview-content img{max-width:100%}
+.history-actions{height:52px;min-height:52px;display:flex;justify-content:flex-end;align-items:center;gap:10px;padding:7px 12px;background:var(--list);border-top:1px solid var(--line)}
+.history-actions button{min-width:190px;height:32px;padding:0 12px;border-radius:5px;background:#377df4;color:#fff;font-size:11px}
+.history-actions button:disabled{background:color-mix(in srgb,var(--muted) 35%,var(--list));color:color-mix(in srgb,var(--muted) 78%,var(--paper));cursor:default}
+
+/* Detached rename dialog fills its window; no second background frame. */
+.detached-mount>.name-dialog{background:var(--paper)!important}
+.detached-mount>.name-dialog>.name-dialog-card{
+  width:100%!important;height:100%!important;max-width:none!important;
+  display:flex!important;flex-direction:column;justify-content:center;
+  border:0!important;border-radius:0!important;box-shadow:none!important;
+  padding:22px 28px!important;
+}
+
+@media(max-width:560px){
+  .settings-dialog{grid-template-columns:112px minmax(0,1fr)}
+  .settings-main>.settings-page{padding:14px 16px 30px}
+  #settingsTheme .theme-choices{grid-template-columns:1fr!important}
+  .history-layout{grid-template-columns:190px minmax(0,1fr);padding-left:8px;padding-right:8px}
+  .history-actions{gap:8px;padding-left:8px;padding-right:8px}
+  .history-actions button{min-width:0;flex:1}
+}

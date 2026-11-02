@@ -1,0 +1,52 @@
+/* Theme variables are applied by settings() to the body. */
+.editor{color:var(--text)}
+.editor :is(h1,h2,h3,h4,h5,h6){color:var(--accent)}
+.editor :is(h1,h2,h3,h4,h5,h6)::before{color:var(--muted)}
+.editor :is(ul,ol,li){color:var(--text)}
+.editor li::marker{color:var(--muted)}
+.editor blockquote{color:var(--muted);border-left-color:var(--accent)}
+.editor :is(strong,b){color:var(--strong-ink);font-weight:700}
+.editor :is(em,i){color:var(--italic-ink);font-style:italic}
+.editor :is(s,strike,del){color:var(--strike-ink);text-decoration:line-through}
+.editor :is(mark,.editor-annotation,[data-qijian-mark="annotation"]){color:var(--annotation-ink);background:var(--annotation-bg)}
+.editor code{color:var(--code-ink);background:var(--code-bg);border-radius:3px}
+.editor .editor-comment{color:var(--comment-ink)}
+.menu-popup,.item-context,.tool-panel,.settings-dialog,.mindmap-window,.word-stats,.find-panel,.name-dialog-card{background:var(--paper);color:var(--text);border-color:var(--line)}
+#edgebar{background:var(--nav);color:var(--text);border-bottom-color:var(--line)}
+#edgebar button,#edgebar .edge-actions button{color:var(--text)}
+#edgebar .edge-actions #saveState{color:var(--muted)}
+#edgebar .menus button:hover,#edgebar .edge-actions button:not(.close):hover{background:var(--sel)}
+.menu-popup hr{border-top-color:var(--line)}
+.menu-popup .menu-shortcut{color:var(--muted)}
+.settings-nav,.settings-drag-handle,.mindmap-window-head{background:var(--list);color:var(--text);border-color:var(--line)}
+.settings-nav button.active{background:var(--paper)}
+.settings-nav button:hover,.mindmap-window-head button:hover,.menu-popup button:hover,.item-context button:hover{background:var(--sel)}
+.settings-fields input,.settings-fields select,.advanced-fields input,.image-export-options select{background:var(--paper);color:var(--text);border-color:var(--line)}
+.settings-reset,#settingsStorage button{background:var(--list);color:var(--text)}
+.theme-choices{grid-template-columns:repeat(auto-fit,minmax(min(310px,100%),1fr));gap:14px;max-width:900px;margin:0 auto}
+.theme-choices button{position:relative;min-width:0;align-items:stretch;padding:4px;text-align:left;border:1px solid transparent;border-radius:11px;transition:border-color .15s,box-shadow .15s,transform .15s}
+.theme-choices button:hover{transform:translateY(-1px);box-shadow:0 7px 20px #00000012}
+.theme-choices button.selected{border-color:var(--accent);box-shadow:0 0 0 2px color-mix(in srgb,var(--accent) 16%,transparent)}
+.theme-choices button.selected::after{content:"✓";position:absolute;right:12px;top:11px;display:grid;place-items:center;width:19px;height:19px;border-radius:50%;background:var(--accent);color:var(--paper);font:700 11px/1 sans-serif}
+.theme-preview{height:150px;padding:15px 18px;border:1px solid color-mix(in srgb,var(--preview-text) 18%,transparent);border-radius:9px;background:var(--preview-paper);color:var(--preview-text);overflow:hidden;white-space:nowrap;box-shadow:0 4px 14px #0000000d}
+#app .theme-preview :where(span,b,i,mark,code,small){font-family:Georgia,"Microsoft YaHei",serif;font-size:15px;line-height:1.7}
+.theme-preview .theme-preview-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:5px;padding-right:22px}
+.theme-preview .theme-preview-heading,.theme-preview .theme-preview-line{display:block}
+#app .theme-preview .theme-preview-heading{font-size:19px;font-weight:600;color:var(--preview-accent)}
+#app .theme-preview .theme-preview-level{display:inline-block;margin-right:11px;color:color-mix(in srgb,var(--preview-text) 45%,transparent);font:11px/1.2 "Times New Roman",serif}
+#app .theme-preview .theme-preview-mode{color:var(--preview-accent);font:16px/1 sans-serif}
+.theme-preview b{color:var(--preview-strong-ink)}
+.theme-preview i{color:var(--preview-italic-ink)}
+.theme-preview mark{color:var(--preview-annotation-ink);background:var(--preview-annotation-bg)}
+.theme-preview code{color:var(--preview-code-ink);background:var(--preview-code-bg)}
+.theme-preview small{color:var(--preview-comment-ink)}
+.word-stats{width:126px;padding:8px 12px 10px;box-shadow:0 10px 26px #0002}
+.word-stat{padding:7px 0 6px;border-color:var(--line)}
+#app .word-stats .word-stat strong{font-size:18px;line-height:1.2}
+#app .word-stats .word-stat span{font-size:13px;line-height:1.25}
+@media(max-width:720px){.theme-choices{grid-template-columns:1fr}}
+
+
+.editor{--outline-node:var(--muted);--outline-line:var(--muted)}
+/* Headings always inherit the active theme accent, including legacy inline spans. */
+.editor :is(h1,h2,h3,h4,h5,h6),.editor :is(h1,h2,h3,h4,h5,h6) *{color:var(--accent)!important}

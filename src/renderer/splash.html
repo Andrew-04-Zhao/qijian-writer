@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>栖简启动</title>
+  <style>
+    * { box-sizing: border-box; }
+    html, body { margin: 0; width: 100%; height: 100%; overflow: hidden; }
+    body { font-family: "Microsoft YaHei", sans-serif; background: #eee8d8; color: #4c4a43; display: grid; place-items: center; user-select: none; }
+    .splash { width: 100%; height: 100%; padding: 30px 38px 26px; display: flex; flex-direction: column; align-items: center; }
+    .mark { width: 58px; height: 58px; border-radius: 18px 18px 18px 7px; background: #596b60; color: #fff; display: grid; place-items: center; font: 30px/1 KaiTi, serif; box-shadow: 0 10px 24px #45564c33; animation: breathe 1.55s ease-in-out infinite; }
+    h1 { font: 600 22px/1.2 "Microsoft YaHei", sans-serif; letter-spacing: .18em; margin: 14px 0 3px; padding-left: .18em; }
+    .sub { font-size: 11px; color: #8d897d; letter-spacing: .08em; }
+    .dots { display: flex; gap: 5px; margin-top: 12px; }
+    .dots i { width: 4px; height: 4px; border-radius: 50%; background: #839188; animation: dot 1.2s infinite; }
+    .dots i:nth-child(2) { animation-delay: .16s; }
+    .dots i:nth-child(3) { animation-delay: .32s; }
+    .status { width: 100%; display: flex; justify-content: space-between; margin-top: auto; font-size: 11px; color: #77756d; }
+    .track { width: 100%; height: 4px; margin-top: 8px; background: #d9d2c2; border-radius: 9px; overflow: hidden; }
+    .bar { height: 100%; width: 12%; background: #397ef3; border-radius: inherit; transition: width .25s ease; }
+    @keyframes breathe { 50% { transform: translateY(-3px) scale(1.035); box-shadow: 0 14px 30px #45564c42; } }
+    @keyframes dot { 0%, 70%, 100% { opacity: .25; transform: translateY(0); } 35% { opacity: 1; transform: translateY(-3px); } }
+  </style>
+</head>
+<body>
+  <main class="splash">
+    <div class="mark">栖</div>
+    <h1>栖简</h1>
+    <div class="sub">本地写作空间</div>
+    <div class="dots"><i></i><i></i><i></i></div>
+    <div class="status"><span id="startupLabel">正在准备本地文稿库</span><span id="startupValue">12%</span></div>
+    <div class="track"><div id="startupBar" class="bar"></div></div>
+  </main>
+</body>
+</html>

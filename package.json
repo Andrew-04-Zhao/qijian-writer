@@ -1,0 +1,97 @@
+{
+  "name": "qijian-writer",
+  "version": "0.1.0",
+  "private": true,
+  "description": "栖简：本地优先的个人写作与思维整理工具",
+  "main": "src/main.js",
+  "scripts": {
+    "start": "electron .",
+    "build:editor": "esbuild src/renderer/editor-core-source.js --bundle --format=iife --outfile=src/renderer/editor-core.bundle.js",
+    "check": "npm run build:editor && node --check src/main.js && node --check src/preload.js && node --check src/splash-preload.js && node --check src/image-export.js && node --check src/library-images.js && node --check src/renderer/markdown.js && node --check src/renderer/app.js && node --check src/renderer/enhancements.js && node --check src/spellcheck.js && node --check src/font-catalog.js && node --check src/renderer/writing-preferences.js && node --check src/backup-stream.js && node --check src/export-images.js && node --check src/pdf-export.js && node --check src/display-preferences.js && node --check src/renderer/display-preferences.js",
+    "test:smoke": "npm run test:library-images && npm run test:image-ingestion && npm run test:structured-editor && npm run test:outline-ui && npm run test:mindmap && npm run test:link-click && npm run test:editor-focus && npm run test:image-ui && npm run test:export-images && npm run test:settings-history && npm run test:history-session && npm run test:history-scroll && npm run test:backup && npm run test:backup-images && npm run test:backup-ui && npm run test:migration && npm run test:splash && npm run test:writing-preferences && npm run test:backup-stream && npm run test:memory-lifecycle && npm run test:pdf-export && npm run test:display-preferences",
+    "test:library-images": "node tests/library-images-smoke.cjs",
+    "test:clipboard": "electron tests/structured-editor-smoke.cjs",
+    "test:heading-enter": "electron tests/structured-editor-smoke.cjs",
+    "test:editor-format": "electron tests/structured-editor-smoke.cjs",
+    "test:formula": "electron tests/structured-editor-smoke.cjs",
+    "test:settings-history": "electron tests/settings-history-smoke.cjs",
+    "test:history-session": "electron tests/history-session-smoke.cjs",
+    "test:history-scroll": "electron tests/history-scroll-smoke.cjs",
+    "test:backup": "electron tests/manual-backup-smoke.cjs",
+    "build:windows": "electron-builder --win portable --x64",
+    "test:splash": "electron tests/startup-splash-smoke.cjs",
+    "build:installer": "electron-builder --win nsis --x64 --config.win.artifactName=\"栖简-${version}-安装版.${ext}\"",
+    "test:migration": "electron tests/library-migration-smoke.cjs",
+    "test:structured-editor": "electron tests/structured-editor-smoke.cjs",
+    "test:outline-ui": "electron tests/outline-interaction-smoke.cjs",
+    "test:mindmap": "electron tests/detached-mindmap-smoke.cjs",
+    "test:image-ui": "electron tests/structured-image-drag-smoke.cjs",
+    "test:export-images": "electron tests/export-images-smoke.cjs",
+    "test:link-click": "electron tests/link-click-smoke.cjs",
+    "test:image-ingestion": "electron tests/image-ingestion-smoke.cjs",
+    "test:backup-ui": "electron tests/backup-ui-smoke.cjs",
+    "test:editor-focus": "electron tests/editor-focus-smoke.cjs",
+    "test:backup-images": "electron tests/backup-image-reuse-smoke.cjs",
+    "test:installer": "node tests/installer-process-check-smoke.cjs && node tests/installer-location.cjs",
+    "test:writing-preferences": "electron tests/writing-preferences-smoke.cjs",
+    "test:backup-stream": "node tests/backup-stream-smoke.cjs",
+    "test:memory-lifecycle": "electron tests/memory-lifecycle-smoke.cjs",
+    "test:pdf-export": "electron tests/pdf-export-smoke.cjs",
+    "test:display-preferences": "electron tests/display-preferences-smoke.cjs"
+  },
+  "build": {
+    "appId": "com.qijian.writer",
+    "productName": "栖简",
+    "asar": true,
+    "files": [
+      "src/**/*",
+      "package.json"
+    ],
+    "win": {
+      "target": [
+        {
+          "target": "portable",
+          "arch": [
+            "x64"
+          ]
+        }
+      ],
+      "executableName": "栖简",
+      "artifactName": "栖简-${version}-Windows.${ext}"
+    },
+    "nsis": {
+      "oneClick": false,
+      "include": "build/installer.nsh",
+      "installerSidebar": "build/welcome.bmp",
+      "installerHeader": "build/header.bmp",
+      "installerLanguages": [
+        "zh_CN"
+      ],
+      "perMachine": false,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "栖简",
+      "deleteAppDataOnUninstall": false,
+      "allowToChangeInstallationDirectory": true
+    }
+  },
+  "dependencies": {
+    "docx": "^9.5.1",
+    "katex": "^0.16.22",
+    "prosemirror-commands": "^1.7.2",
+    "prosemirror-gapcursor": "^1.4.1",
+    "prosemirror-history": "^1.5.1",
+    "prosemirror-inputrules": "^1.5.1",
+    "prosemirror-keymap": "^1.2.3",
+    "prosemirror-model": "^1.25.12",
+    "prosemirror-schema-basic": "^1.2.5",
+    "prosemirror-schema-list": "^1.5.1",
+    "prosemirror-state": "^1.4.4",
+    "prosemirror-view": "^1.42.6"
+  },
+  "devDependencies": {
+    "electron": "^39.2.7",
+    "electron-builder": "^26.0.12",
+    "esbuild": "^0.28.2"
+  }
+}
